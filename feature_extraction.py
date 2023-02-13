@@ -3,22 +3,32 @@
 # Feature Extraction
 
 import stanza
-import re
+import constituent_treelib
+from constituent_treelib import ConstituentTree
+from collections import defaultdict
 
 
-def process_text_with_stanza(text):
+def process_text(text):
     """
     Process text with an English stanza pipeline.
     :param str text: a text
-    :return: stanza.Document processed_text
+    :return: stanza.Document processed_text_stanza, ConstituentTree constituent_tree
     """
-    nlp = stanza.Pipeline('en')
-    processed_text: stanza.Document = nlp(text)
+    # instantiate stanza pipeline and process text
+    stanza_pipeline = stanza.Pipeline('en')
+    processed_text_stanza: stanza.Document = stanza_pipeline(text)
 
-    return processed_text
+    # instantiate treelib pipeline (based on spaCy) and process text; afaik it works only for a single sentence, we
+    # might need a loop for this one -> maybe we should tokenize our text with spaCy and then feed the pre-tokenized
+    # text into stanza too (stanza can actually use the spaCy tokenizer) to make sure the tokenization is equal
+    treelib_pipeline = ConstituentTree.create_pipeline(ConstituentTree.Language.English,
+                                                       ConstituentTree.SpacyModelSize.Large)
+    constituent_tree = ConstituentTree(text, treelib_pipeline)
+
+    return processed_text_stanza, constituent_tree
 
 
-def extract_features(doc):
+def extract_features(doc, constituent_tree):
     """
     Extract feature dictionaries for every word in a stanza.Document object, store them in lists, zip and return them.
     :param stanza.Document doc: a stanza.Document object containing processed text
@@ -29,48 +39,6 @@ def extract_features(doc):
     binary_feature_dictionaries = []
 
     for sentence in doc.sentences:
-        # print(sentence)
-        # constituent_tree = sentence.constituency
-        # # print(help(constituent_tree))
-        # # print(constituent_tree.label)
-        # print(constituent_tree.children[0].children)
-        # # print(constituent_tree.pretty_print())
-        # # print(constituent_tree.leaf_labels())
-        # # print(constituent_tree.depth())
-        #
-        # # constituents = str(constituent_tree.pretty_print()).split('\n')
-        # # print(constituents)
-        #
-        # constituents = str(constituent_tree.children[0].children).replace(',', '')
-        # constituents = constituents.replace('(', '', 1)
-        # print(constituents)
-        #
-        # open_counter = 0
-        # close_counter = 0
-        # constituent = ''
-        # for character in constituents:
-        #     constituent = constituent + character
-        #     if character == '(':
-        #         open_counter += 1
-        #     if character == ')':
-        #         close_counter += 1
-        #     if open_counter == close_counter:
-        #         print(constituent)
-        #         constituent = ''
-        #         open_counter = 0
-        #         close_counter = 0
-
-        # constituents = []
-        # def break_down_constituents(constituent_structure):
-        #     for child in constituent_structure.children:
-        #         constituent = str(child).split(')')
-        #         constituents.append(constituent)
-        #         break_down_constituents(child)
-        #
-        # break_down_constituents(constituent_tree.children[0])
-        # for el in constituents:
-        #     print(el)
-
         for word in sentence.words:
 
             # create feature dictionaries for the word
@@ -90,6 +58,22 @@ def extract_features(doc):
             else:
                 binary_feature_dictionary['is_root'] = 0
 
+            # get the constituencies ### exploratory, still in work
+            print(constituent_tree)
+            print(help(constituent_tree))
+            constituents = constituent_tree.extract_all_phrases(
+                content=constituent_treelib.core.ConstituentTree.NodeContent.Combined)
+            print(constituents)
+
+            new_dict = defaultdict(list)
+            for label, c_list in constituents.items():
+                for el in c_list:
+                    new_dict[label].append(el.split())
+
+            print(new_dict)
+
+            quit()  # stop to test the code faster
+
             # append the feature dictionary to the list of feature dictionaries
             categorical_feature_dictionaries.append(categorical_feature_dictionary)
             binary_feature_dictionaries.append(binary_feature_dictionary)
@@ -103,14 +87,14 @@ def perform_feature_extraction(text):
     :param text: a text
     :return: None
     """
-    processed_text = process_text_with_stanza(text)
-    feature_dictionaries = extract_features(processed_text)
+    processed_text, constituent_tree = process_text(text)
+    feature_dictionaries = extract_features(processed_text, constituent_tree)
     for categorical_binary_pair in feature_dictionaries:
         print(categorical_binary_pair)
 
 
 if __name__ == '__main__':
-    example_sentence = '''I love you.'''
+    example_sentence = 'I love you from the bottom of my heart.'
     perform_feature_extraction(example_sentence)
 
 # '''Everyone has the right to an effective remedy by the competent national tribunals for acts
