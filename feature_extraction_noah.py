@@ -50,7 +50,8 @@ def obtain_information(tree_object):
     # {0: {S: {1: ['Marry', 'me', 'Juliet', ',', 'you', "'ll", 'never', 'have', 'to', 'be', 'alone', '.']}}}
 
     inspect_children(tree_object, constituent_information)
-    print(constituent_information)
+    for const, info in constituent_information.items():
+        print(const, info)
 
 
 def extract_features(doc):
@@ -109,7 +110,8 @@ def perform_feature_extraction(text):
 
 
 if __name__ == '__main__':
-    example_sentence = 'I love Misja, who is my boyfriend.'
+    example_sentence = '''Everyone has the right to an effective remedy by the competent national tribunals for acts 
+    violating the fundamental rights granted him by the constitution or by law.'''
     perform_feature_extraction(example_sentence)
 
 # '''Everyone has the right to an effective remedy by the competent national tribunals for acts
