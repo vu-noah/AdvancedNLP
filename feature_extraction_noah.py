@@ -20,22 +20,37 @@ def process_text(text):
     return processed_text_stanza
 
 
-def obtain_information(subtree):
-    storage = defaultdict(list)
-    iteration = 0
+def obtain_information(tree_object):
+    """
 
-    def get_children(subtree, storage, iteration):
-        iteration += 1
+    :param tree_object:
+    :return:
+    """
+    constituent_information = {}
+    phrase_counter = defaultdict(int)
+
+    def inspect_children(subtree, constituents, depth=-1):
+        """
+
+        :param subtree:
+        :param constituents:
+        :param depth:
+        :return:
+        """
+        depth += 1
         for subtree in subtree.children:
-            if subtree.label in re.findall(r'S|NP|VP|PP|CC', subtree.label):
-                storage[f'{subtree.label}{iteration-1}'].append(subtree.leaf_labels())
-            try:
-                get_children(subtree, storage, iteration)
-            except ValueError:
-                continue
+            if subtree.label in re.findall(r'SBAR|NP|VP|PP|CC|ADJP|S|WHNP', subtree.label):
+                phrase_counter[subtree.label] += 1
+                phrase_number_level_information = f'{subtree.label}_num{phrase_counter[subtree.label]}_depth{depth}'
+                constituents[phrase_number_level_information] = subtree.leaf_labels()
 
-    get_children(subtree, storage, iteration)
-    print(storage)
+            inspect_children(subtree, constituents, depth)
+
+    # idea: nested dictionary instead having the information about depth and number of phrase in the key
+    # {0: {S: {1: ['Marry', 'me', 'Juliet', ',', 'you', "'ll", 'never', 'have', 'to', 'be', 'alone', '.']}}}
+
+    inspect_children(tree_object, constituent_information)
+    print(constituent_information)
 
 
 def extract_features(doc):
@@ -94,7 +109,7 @@ def perform_feature_extraction(text):
 
 
 if __name__ == '__main__':
-    example_sentence = 'I want to marry you and your crazy grandmother.'
+    example_sentence = 'I love Misja, who is my boyfriend.'
     perform_feature_extraction(example_sentence)
 
 # '''Everyone has the right to an effective remedy by the competent national tribunals for acts
