@@ -26,7 +26,7 @@ def obtain_information(tree_object):
     :param tree_object:
     :return:
     """
-    constituent_information = {}
+    constituent_information = defaultdict(list)
     phrase_counter = defaultdict(int)
 
     def inspect_children(subtree, constituents, depth=-1):
@@ -41,8 +41,11 @@ def obtain_information(tree_object):
         for subtree in subtree.children:
             if subtree.label in re.findall(r'SBAR|NP|VP|PP|CC|ADJP|S|WHNP', subtree.label):
                 phrase_counter[subtree.label] += 1
-                phrase_number_level_information = f'{subtree.label}_num{phrase_counter[subtree.label]}_depth{depth}'
-                constituents[phrase_number_level_information] = subtree.leaf_labels()
+                phrase_counter_to_elements = {phrase_counter[subtree.label]: subtree.leaf_labels()}
+                phrase_type_to_phrase_counter = {subtree.label: phrase_counter_to_elements}
+                constituents[depth].append(phrase_type_to_phrase_counter)
+                # phrase_number_level_information = f'{subtree.label}_num{phrase_counter[subtree.label]}_depth{depth}'
+                # constituents[phrase_number_level_information] = subtree.leaf_labels()
 
             inspect_children(subtree, constituents, depth)
 
@@ -50,6 +53,10 @@ def obtain_information(tree_object):
     # {0: {S: {1: ['Marry', 'me', 'Juliet', ',', 'you', "'ll", 'never', 'have', 'to', 'be', 'alone', '.']}}}
 
     inspect_children(tree_object, constituent_information)
+    print('RAW')
+    print(constituent_information)
+    print()
+    print('PRETTY')
     for const, info in constituent_information.items():
         print(const, info)
 
