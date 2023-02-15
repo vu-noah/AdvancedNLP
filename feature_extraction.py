@@ -3,8 +3,6 @@
 # Feature Extraction
 
 import stanza
-import re
-from collections import defaultdict
 from lxml import etree
 
 
