@@ -114,13 +114,20 @@ def extract_features(doc):
             for element in tree.iter():
                 if element.text == word.text and int(element.get('INDEX')) == word.id-1:
                     parent = element.getparent()
-                    if get_phrase_type(tree, word) != get_phrase_type(tree, sentence.words[head_id]) or word.head == 0:
-                        for element_2 in parent.findall("terminal"):
-                            constituent_tokens.append(element_2.text.lower())
-                            constituent_pos.append(element_2.attrib['POS'])
+                    for element_2 in parent.findall("terminal"):
+                        constituent_tokens.append(element_2.text.lower())
+                        constituent_pos.append(element_2.attrib['POS'])
 
             categorical_feature_dictionary['constituent_words'] = constituent_tokens
             categorical_feature_dictionary['constituent_POS'] = constituent_pos
+
+            # if NP, governed by what 'S' or 'VP'?
+            for element in root.findall('.//terminal'):
+                if element.getparent().tag == 'NP' and element.text == word.text:
+                    if element.getparent() not in root.find('.//VP').findall('.//NP'):
+                        categorical_feature_dictionary['governed_by'] = 'S'
+                    else:
+                        categorical_feature_dictionary['governed_by'] = 'VP'
 
             # append the feature dictionary to the list of feature dictionaries
             categorical_feature_dictionaries.append(categorical_feature_dictionary)
@@ -142,7 +149,7 @@ def perform_feature_extraction(text):
 
 
 if __name__ == '__main__':
-    example_sentence = '''A major drawback is to drawback the man.'''
+    example_sentence = '''The chubby llama is eating a bunch of grass.'''
     perform_feature_extraction(example_sentence)
 
 # '''Everyone has the right to an effective remedy by the competent national tribunals for acts
