@@ -3,9 +3,9 @@
 # Feature Extraction
 
 import stanza
-import constituent_treelib
-from constituent_treelib import ConstituentTree
+import re
 from collections import defaultdict
+from lxml import etree
 
 
 def process_text(text):
@@ -18,17 +18,55 @@ def process_text(text):
     stanza_pipeline = stanza.Pipeline('en')
     processed_text_stanza: stanza.Document = stanza_pipeline(text)
 
-    # instantiate treelib pipeline (based on spaCy) and process text; afaik it works only for a single sentence, we
-    # might need a loop for this one -> maybe we should tokenize our text with spaCy and then feed the pre-tokenized
-    # text into stanza too (stanza can actually use the spaCy tokenizer) to make sure the tokenization is equal
-    treelib_pipeline = ConstituentTree.create_pipeline(ConstituentTree.Language.English,
-                                                       ConstituentTree.SpacyModelSize.Large)
-    constituent_tree = ConstituentTree(text, treelib_pipeline)
-
-    return processed_text_stanza, constituent_tree
+    return processed_text_stanza
 
 
-def extract_features(doc, constituent_tree):
+def parse_string_to_xml(sentence_list, node, constituent_tree_object):
+    """
+
+    :param sentence_list:
+    :param node:
+    :param constituent_tree_object:
+    :return:
+    """
+    for child in constituent_tree_object.children:
+        if len(str(child).split(' ')) == 2:
+            element = etree.SubElement(node, 'terminal')
+            element.set('POS', child.label)
+            element.set('INDEX', str(sentence_list.index(child.leaf_labels()[0])))
+            sentence_list[sentence_list.index(child.leaf_labels()[0])] = 'ALR_PARSED'
+            element.text = child.leaf_labels()[0]
+            continue
+        else:
+            try:
+                element = etree.SubElement(node, child.label)
+            except ValueError:
+                element = etree.SubElement(node, 'PUNCT')
+            if len(str(child).split(' ')) == 2:
+                element.text = child.leaf_labels()[0]
+                continue
+
+        parse_string_to_xml(sentence_list, element, child)
+
+    print(sentence_list)
+    return node
+
+
+def get_phrase_type(tree, word):
+    """
+
+    :param tree:
+    :param word:
+    :return:
+    """
+    for element in tree.iter():
+        if element.text == word.text and int(element.get('INDEX')) == word.id-1:
+            parent = (element.getparent())
+
+            return parent.tag
+
+
+def extract_features(doc):
     """
     Extract feature dictionaries for every word in a stanza.Document object, store them in lists, zip and return them.
     :param stanza.Document doc: a stanza.Document object containing processed text
@@ -39,10 +77,19 @@ def extract_features(doc, constituent_tree):
     binary_feature_dictionaries = []
 
     for sentence in doc.sentences:
+
+        print(sentence.constituency.pretty_print())
+
+        sentence_token_list = [word.text for word in sentence.words]
+        print(sentence_token_list)
+        root = etree.Element("sentence")
+        tree = parse_string_to_xml(sentence_token_list, root, sentence.constituency)
+        etree.dump(tree)
+
         for word in sentence.words:
 
             # create feature dictionaries for the word
-            categorical_feature_dictionary = {'token': word.text.lower()}
+            categorical_feature_dictionary = {'word': word.text.lower()}
             binary_feature_dictionary = {}
 
             # get the head of the token
@@ -58,21 +105,8 @@ def extract_features(doc, constituent_tree):
             else:
                 binary_feature_dictionary['is_root'] = 0
 
-            # get the constituencies ### exploratory, still in work
-            print(constituent_tree)
-            print(help(constituent_tree))
-            constituents = constituent_tree.extract_all_phrases(
-                content=constituent_treelib.core.ConstituentTree.NodeContent.Combined)
-            print(constituents)
-
-            new_dict = defaultdict(list)
-            for label, c_list in constituents.items():
-                for el in c_list:
-                    new_dict[label].append(el.split())
-
-            #print(new_dict)
-
-            #quit()  # stop to test the code faster
+            # get the phrase type of the phrase the current token belongs to
+            categorical_feature_dictionary['phrase_type'] = get_phrase_type(tree, word)
 
             # append the feature dictionary to the list of feature dictionaries
             categorical_feature_dictionaries.append(categorical_feature_dictionary)
@@ -87,14 +121,14 @@ def perform_feature_extraction(text):
     :param text: a text
     :return: None
     """
-    processed_text, constituent_tree = process_text(text)
-    feature_dictionaries = extract_features(processed_text, constituent_tree)
+    processed_text = process_text(text)
+    feature_dictionaries = extract_features(processed_text)
     for categorical_binary_pair in feature_dictionaries:
         print(categorical_binary_pair)
 
 
 if __name__ == '__main__':
-    example_sentence = 'I love you from the bottom of my heart.'
+    example_sentence = '''A major drawback is to drawback the man.'''
     perform_feature_extraction(example_sentence)
 
 # '''Everyone has the right to an effective remedy by the competent national tribunals for acts
