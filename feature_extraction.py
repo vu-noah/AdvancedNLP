@@ -33,8 +33,10 @@ def parse_string_to_xml(sentence_list, node, constituent_tree_object):
         if len(str(child).split(' ')) == 2:
             element = etree.SubElement(node, 'terminal')
             element.set('POS', child.label)
-            element.set('INDEX', str(sentence_list.index(child.leaf_labels()[0])))
-            sentence_list[sentence_list.index(child.leaf_labels()[0])] = 'ALR_PARSED'
+            word = child.leaf_labels()[0]
+            index_of_word_in_sentence = sentence_list.index(word)
+            element.set('INDEX', str(index_of_word_in_sentence))
+            sentence_list[index_of_word_in_sentence] = 'ALR_PARSED'
             element.text = child.leaf_labels()[0]
             continue
         else:
@@ -48,7 +50,6 @@ def parse_string_to_xml(sentence_list, node, constituent_tree_object):
 
         parse_string_to_xml(sentence_list, element, child)
 
-    print(sentence_list)
     return node
 
 
@@ -81,7 +82,6 @@ def extract_features(doc):
         print(sentence.constituency.pretty_print())
 
         sentence_token_list = [word.text for word in sentence.words]
-        print(sentence_token_list)
         root = etree.Element("sentence")
         tree = parse_string_to_xml(sentence_token_list, root, sentence.constituency)
         etree.dump(tree)
@@ -107,6 +107,20 @@ def extract_features(doc):
 
             # get the phrase type of the phrase the current token belongs to
             categorical_feature_dictionary['phrase_type'] = get_phrase_type(tree, word)
+
+            # get whole constituent (words and POS)
+            constituent_tokens = []
+            constituent_pos = []
+            for element in tree.iter():
+                if element.text == word.text and int(element.get('INDEX')) == word.id-1:
+                    parent = element.getparent()
+                    if get_phrase_type(tree, word) != get_phrase_type(tree, sentence.words[head_id]) or word.head == 0:
+                        for element_2 in parent.findall("terminal"):
+                            constituent_tokens.append(element_2.text.lower())
+                            constituent_pos.append(element_2.attrib['POS'])
+
+            categorical_feature_dictionary['constituent_words'] = constituent_tokens
+            categorical_feature_dictionary['constituent_POS'] = constituent_pos
 
             # append the feature dictionary to the list of feature dictionaries
             categorical_feature_dictionaries.append(categorical_feature_dictionary)
