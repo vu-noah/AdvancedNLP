@@ -117,8 +117,7 @@ def perform_feature_extraction(text):
 
 
 if __name__ == '__main__':
-    example_sentence = '''Everyone has the right to an effective remedy by the competent national tribunals for acts 
-    violating the fundamental rights granted him by the constitution or by law.'''
+    example_sentence = '''I don\'t like you.'''
     perform_feature_extraction(example_sentence)
 
 # '''Everyone has the right to an effective remedy by the competent national tribunals for acts
