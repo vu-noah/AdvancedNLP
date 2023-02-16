@@ -156,14 +156,27 @@ def extract_features(doc):
             constituent_tokens, constituent_pos = get_whole_constituent(tree, word)
             categorical_feature_dictionary['constituent_words'] = constituent_tokens
             categorical_feature_dictionary['constituent_POS'] = constituent_pos
-
-            # if NP, governed by what 'S' or 'VP'?
-            for element in root.findall('.//terminal'):
+                        
+            # if NP, governed by what 'S' or 'VP'? + voice (passive/active)
+            for element in root.findall('.//terminal'): 
                 if element.getparent().tag == 'NP' and element.text == word.text:
                     if element.getparent() not in root.find('.//VP').findall('.//NP'):
                         categorical_feature_dictionary['governed_by'] = 'S'
+                        for element in root.findall('.//terminal'):
+                            if element.attrib.get('POS') == 'VBN':
+                                id = root.findall('.//terminal').index(element)
+                                if root.findall('.//terminal')[id-1].text in ['am','is','are','was','were','been','be']:
+                                    categorical_feature_dictionary['government_voice_relation'] = 'governed_by_S_and_verb_passive' 
                     else:
                         categorical_feature_dictionary['governed_by'] = 'VP'
+                        for element in root.findall('.//terminal'):
+                            if element.attrib.get('POS') == 'VBN':
+                                id = root.findall('.//terminal').index(element)
+                                if root.findall('.//terminal')[id-1].text in ['am','is','are','was','were','been','be']:
+                                    categorical_feature_dictionary['government_voice_relation'] = 'governed_by_VP_and_verb_passive'
+            
+            # get dependency label of the current token 
+            categorical_feature_dictionary['dependency label'] = word.deprel
 
             # append the feature dictionary to the list of feature dictionaries
             categorical_feature_dictionaries.append(categorical_feature_dictionary)
