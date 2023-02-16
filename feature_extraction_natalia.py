@@ -159,7 +159,15 @@ def perform_feature_extraction(text):
 if __name__ == '__main__':
     example_sentence = 'The book is written by John and it was sold for a lot of money.'
     perform_feature_extraction(example_sentence)
+
     
+# feature 6 (STORED HERE JUST IN CASE)
+for element in root.findall('.//terminal'):
+    if element.getparent().tag == 'NP' and element.text == word.text:
+        if element.getparent() not in root.find('.//VP').findall('.//NP'):
+            categorical_feature_dictionary['governed_by'] = 'S'
+        else:
+            categorical_feature_dictionary['governed_by'] = 'VP'
     
 # feature 10 (distance from the token to the whole VP/VPs) WORKS BUT NEEDS TO BE INEGRATED INTO THE CODE
 vp_indices, other_indices, distance = [], [], []
