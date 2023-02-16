@@ -19,50 +19,95 @@ def process_text(text):
     return processed_text_stanza
 
 
-def parse_string_to_xml(sentence_list, node, constituent_tree_object):
+def parse_string_to_xml(node, constituent_tree_object):
     """
-
     :param sentence_list:
     :param node:
     :param constituent_tree_object:
     :return:
     """
+
     for child in constituent_tree_object.children:
+        
+        #create terminal nodes
+        
         if len(str(child).split(' ')) == 2:
             element = etree.SubElement(node, 'terminal')
             element.set('POS', child.label)
-            word = child.leaf_labels()[0]
-            index_of_word_in_sentence = sentence_list.index(word)
-            element.set('INDEX', str(index_of_word_in_sentence))
-            sentence_list[index_of_word_in_sentence] = 'ALR_PARSED'
             element.text = child.leaf_labels()[0]
             continue
+        #create non-terminal nodes
         else:
             try:
                 element = etree.SubElement(node, child.label)
             except ValueError:
-                element = etree.SubElement(node, 'PUNCT')
-            if len(str(child).split(' ')) == 2:
-                element.text = child.leaf_labels()[0]
-                continue
-
-        parse_string_to_xml(sentence_list, element, child)
+                element = etree.SubElement(node, 'OTH')
+                
+        parse_string_to_xml(element, child)
 
     return node
+
+def add_attributes_to_xml(sentence, tree):
+    
+    head_id_dict = {}
+    deprel_dict = {}
+    for word in sentence.words:
+        
+        head_id_dict[word.text] = str(word.head-1)
+        deprel_dict[word.text] = word.deprel
+    
+    index = 0
+    for element in tree.iter():
+        if element.tag == 'terminal':
+            element.set('index', str(index))
+            index += 1
+            element.set('head_id', head_id_dict[element.text])
+            element.set('deprel', deprel_dict[element.text])
+    
+    return tree
 
 
 def get_phrase_type(tree, word):
     """
-
     :param tree:
     :param word:
     :return:
     """
     for element in tree.iter():
-        if element.text == word.text and int(element.get('INDEX')) == word.id-1:
+        if element.text == word.text and int(element.get('index')) == word.id-1:
             parent = (element.getparent())
 
             return parent.tag
+        
+    
+def get_whole_constituent(tree, word):
+    constituent_tokens = []
+    constituent_pos = []
+    for element in tree.iter():
+        if element.text == word.text and int(element.get('index')) == word.id-1:
+            parent = element.getparent()
+            whole_constituent = parent.findall("terminal")
+            print("!!!!")
+            for elem in whole_constituent:
+                print(elem.text,elem.get("index"), elem.get("head_id")) 
+                
+            if len(whole_constituent) == 1:
+                constituent_tokens.append(whole_constituent[0].text)
+                constituent_pos.append(whole.constituent[0].get('POS'))
+                               
+                
+    return constituent_tokens, constituent_pos
+
+
+def extract_features(doc):
+    """
+    Extract feature dictionaries for every word in a stanza.Document object, store them in lists, zip and return them.
+    :param stanza.Document doc: a stanza.Document object containing processed text
+    :return: XXX
+    """
+    # create lists to store feature dictionaries in
+    categorical_feature_dictionaries = []
+    binary_feature_dictionaries = []
 
 
 def extract_features(doc):
@@ -81,7 +126,8 @@ def extract_features(doc):
 
         sentence_token_list = [word.text for word in sentence.words]
         root = etree.Element("sentence")
-        tree = parse_string_to_xml(sentence_token_list, root, sentence.constituency)
+        tree = parse_string_to_xml(root, sentence.constituency)
+        add_attributes_to_xml(sentence, tree)
         etree.dump(tree)
 
         for word in sentence.words:
@@ -107,15 +153,7 @@ def extract_features(doc):
             categorical_feature_dictionary['phrase_type'] = get_phrase_type(tree, word)
 
             # get whole constituent (words and POS)
-            constituent_tokens = []
-            constituent_pos = []
-            for element in tree.iter():
-                if element.text == word.text and int(element.get('INDEX')) == word.id-1:
-                    parent = element.getparent()
-                    for element_2 in parent.findall("terminal"):
-                        constituent_tokens.append(element_2.text.lower())
-                        constituent_pos.append(element_2.attrib['POS'])
-
+            constituent_tokens, constituent_pos = get_whole_constituent(tree, word)
             categorical_feature_dictionary['constituent_words'] = constituent_tokens
             categorical_feature_dictionary['constituent_POS'] = constituent_pos
 
@@ -147,7 +185,7 @@ def perform_feature_extraction(text):
 
 
 if __name__ == '__main__':
-    example_sentence = '''The chubby llama is eating a bunch of grass.'''
+    example_sentence = '''The chubby llama is eating a bunch of grass. Meanwhile, though no-one cared to tell him, a big misunderstanding took place.'''
     perform_feature_extraction(example_sentence)
 
 # '''Everyone has the right to an effective remedy by the competent national tribunals for acts
