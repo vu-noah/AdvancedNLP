@@ -161,17 +161,7 @@ if __name__ == '__main__':
     perform_feature_extraction(example_sentence)
     
     
-# feature 10 (distance from the token to the main verb) 
-
-verb_indices = [i for i, element in enumerate(root.findall('.//terminal')) if element.get('POS') in ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']]
-
-for i in range(len([element.text for element in root.findall('.//terminal')])):
-    categorical_feature_dictionary = {} # Already exists in the code 
-    categorical_feature_dictionary['distance_to_verb'] = min(abs(verb_index - i) for verb_index in verb_indices)
-    print(categorical_feature_dictionary)
-    
-    
-# feature 10 (distance from the token to the whole VP/VPs) 
+# feature 10 (distance from the token to the whole VP/VPs) WORKS BUT NEEDS TO BE INEGRATED INTO THE CODE
 vp_indices, other_indices, distance = [], [], []
 
 for vp in root.findall('.//VP'):
@@ -203,6 +193,19 @@ for element in root.findall('.//terminal'):
     print(categorical_feature_dictionary)
     
     
+# feature 9 (ALMOST WORKS)    
+vp = tree.xpath('//VP')[0]
+for element in root.findall('.//terminal'):
+    np = element.getparent()
+    if np not in root.findall('.//VP') and np.tag == 'NP':
+        if np.getparent().index(np) < vp.getparent().index(vp):
+            print('before')
+        elif np.getparent().index(np) == vp.getparent().index(vp):
+            print('none')
+        else:
+            print('after')
+    else:
+        print('none')    
 
 
 # '''Everyone has the right to an effective remedy by the competent national tribunals for acts
