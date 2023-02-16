@@ -13,7 +13,7 @@ def process_text(text):
     :return: stanza.Document processed_text_stanza, ConstituentTree constituent_tree
     """
     # instantiate stanza pipeline and process text
-    stanza_pipeline = stanza.Pipeline('en', download_method=None)
+    stanza_pipeline = stanza.Pipeline('en')
     processed_text_stanza: stanza.Document = stanza_pipeline(text)
 
     return processed_text_stanza
