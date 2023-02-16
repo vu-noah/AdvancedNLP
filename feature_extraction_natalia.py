@@ -134,7 +134,6 @@ def extract_features(doc):
                                 if root.findall('.//terminal')[id-1].text in ['am','is','are','was','were','been','be']:
                                     categorical_feature_dictionary['government_voice_relation'] = 'governed_by_VP_and_verb_passive'
             
-            
             # get dependency label of the current token 
             categorical_feature_dictionary['dependency label'] = word.deprel
         
