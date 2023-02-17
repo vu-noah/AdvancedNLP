@@ -87,10 +87,7 @@ def get_whole_constituent(tree, word):
         if element.text == word.text and int(element.get('index')) == word.id-1:
             parent = element.getparent()
             whole_constituent = parent.findall("terminal")
-            print("!!!!")
-            for elem in whole_constituent:
-                print(elem.text,elem.get("index"), elem.get("head_id")) 
-                
+               
             if len(whole_constituent) == 1:
                 constituent_tokens.append(whole_constituent[0].text)
                 constituent_pos.append(whole_constituent[0].get('POS'))
