@@ -26,7 +26,6 @@ def parse_string_to_xml(node, constituent_tree_object):
     :param constituent_tree_object:
     :return:
     """
-
     for child in constituent_tree_object.children:
         
         #create terminal nodes
