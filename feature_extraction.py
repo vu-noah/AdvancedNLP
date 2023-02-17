@@ -166,19 +166,25 @@ def extract_features(doc):
                                 if root.findall('.//terminal')[id-1].text in ['am','is','are','was','were','been','be']:
                                     categorical_feature_dictionary['government_voice_relation'] = 'governed_by_VP_and_verb_passive'
                                     
-                #get dependents: tokens, pos_tags
-                dependents_tokens = []
-                dependents_POS = []
-                if element.text != word.text and element.get("head_id") == str(word.id-1):
-                    
-                    dependents_tokens.append(element.text)
-                    dependents_POS.append(element.get("POS"))
-                    
-                    categorical_feature_dictionary["dependents_tokens"] = dependents_tokens
-                    categorical_feature_dictionary["dependents_POS"] = dependents_POS
+       
             
             # get dependency label of the current token 
             categorical_feature_dictionary['dependency_label'] = word.deprel
+            
+            
+            #get dependents: tokens, pos_tags, lemmas
+            dependents_tokens = []
+            dependents_POS = []      
+            dependents_lemmas = []
+            for word2 in sentence.words:
+                if word2.head == word.id: 
+                    dependents_tokens.append(word2.text)
+                    dependents_POS.append(word2.xpos)
+                    dependents_lemmas.append(word2.lemma)
+                    categorical_feature_dictionary["dependents_tokens"] = dependents_tokens
+                    categorical_feature_dictionary["dependents_POS"] = dependents_POS
+                    categorical_feature_dictionary["dependents_lemmas"] = dependents_lemmas
+            
 
             # append the feature dictionary to the list of feature dictionaries
             categorical_feature_dictionaries.append(categorical_feature_dictionary)
