@@ -127,7 +127,7 @@ def extract_features(doc):
         root = etree.Element("sentence")
         tree = parse_string_to_xml(root, sentence.constituency)
         add_attributes_to_xml(sentence, tree)
-        etree.dump(tree)
+        # etree.dump(tree)
 
         
         #for each word in the sentence, map word id to head id
