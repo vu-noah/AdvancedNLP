@@ -109,17 +109,6 @@ def extract_features(doc):
     categorical_feature_dictionaries = []
     binary_feature_dictionaries = []
 
-
-def extract_features(doc):
-    """
-    Extract feature dictionaries for every word in a stanza.Document object, store them in lists, zip and return them.
-    :param stanza.Document doc: a stanza.Document object containing processed text
-    :return: XXX
-    """
-    # create lists to store feature dictionaries in
-    categorical_feature_dictionaries = []
-    binary_feature_dictionaries = []
-
     for sentence in doc.sentences:
 
         print(sentence.constituency.pretty_print())
