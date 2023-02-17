@@ -72,6 +72,35 @@ def add_attributes_to_xml(sentence, tree):
     
     return tree
 
+def get_distances_to_VP(root):
+    """
+    Extract indices of the tokens inside the VP(s) and of other tokens,
+    get the distance from the tokens outside of the VP(s) to their governing VP. 
+    :param root: XML tree root
+    :return: a list with indices of the tokens inside the VP(s), 
+    a list with indices of the tokens outside of the VP(s),
+    a list with the distances from the tokens outside the VP(s) to their governing VP 
+    """
+    vp_indices, other_tokens_indices, distances = [], [], []
+
+    for vp in root.findall('.//VP'):
+        for element in vp.findall('.//terminal'):
+            vp_indices.append(root.findall('.//terminal').index(element))
+
+    for element in root.findall('.//terminal'):
+        if root.findall('.//terminal').index(element) not in vp_indices:
+            other_tokens_indices.append(root.findall('.//terminal').index(element))
+
+    for i in range(len(other_tokens_indices)):
+        min_diff = abs(other_tokens_indices[i] - vp_indices[0])
+        for j in range(len(vp_indices)):
+            diff = abs(other_tokens_indices[i] - vp_indices[j])
+            if diff < min_diff:
+                min_diff = diff          
+        distances.append(min_diff)
+    
+    return vp_indices, other_tokens_indices, distances
+
 
 def get_phrase_type(tree, word):
     """
@@ -131,23 +160,7 @@ def extract_features(doc):
         deprel_dict = {word.id: word.head for word in sentence.words}
         # print(deprel_dict)
         
-        vp_indices, other_indices, distances_vp = [], [], []
-
-        for vp in root.findall('.//VP'):
-            for element in vp.findall('.//terminal'):
-                vp_indices.append(root.findall('.//terminal').index(element))
-
-        for element in root.findall('.//terminal'):
-            if root.findall('.//terminal').index(element) not in vp_indices:
-                other_indices.append(root.findall('.//terminal').index(element))
-
-        for i in range(len(other_indices)):
-            min_diff = abs(other_indices[i] - vp_indices[0])
-            for j in range(len(vp_indices)):
-                diff = abs(other_indices[i] - vp_indices[j])
-                if diff < min_diff:
-                    min_diff = diff          
-            distances_vp.append(min_diff)
+        vp_indices, other_tokens_indices, distances = get_distances_to_VP(root)
         
         for word_id, word in enumerate(sentence.words):
 
@@ -226,7 +239,7 @@ def extract_features(doc):
             if word_id in vp_indices:
                 numerical_feature_dictionary['distance_to_VP'] = 0
             else:
-                for i, j in zip(other_indices, distances_vp):
+                for i, j in zip(other_tokens_indices, distances):
                     numerical_feature_dictionary['distance_to_VP'] = j
 
             # append the feature dictionary to the list of feature dictionaries
