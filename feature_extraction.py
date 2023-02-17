@@ -85,8 +85,7 @@ def get_phrase_type(tree, word):
             parent = (element.getparent())
 
             return parent.tag
-        
-    
+
     
 def get_whole_constituent(tree, word):
     """
