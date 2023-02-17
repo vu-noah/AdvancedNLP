@@ -48,6 +48,12 @@ def parse_string_to_xml(node, constituent_tree_object):
 
 
 def add_attributes_to_xml(sentence, tree):
+    """
+
+    :param sentence:
+    :param tree:
+    :return:
+    """
     
     head_id_dict = {}
     deprel_dict = {}
@@ -82,6 +88,12 @@ def get_phrase_type(tree, word):
     
     
 def get_whole_constituent(tree, word):
+    """
+
+    :param tree:
+    :param word:
+    :return:
+    """
     constituent_tokens = []
     constituent_pos = []
     for element in tree.iter():
@@ -158,22 +170,19 @@ def extract_features(doc):
                         for element in root.findall('.//terminal'):
                             if element.attrib.get('POS') == 'VBN':
                                 id = root.findall('.//terminal').index(element)
-                                if root.findall('.//terminal')[id-1].text in ['am','is','are','was','were','been','be']:
+                                if root.findall('.//terminal')[id-1].text.lower() in ['am','is','are','was','were','been','be']:
                                     categorical_feature_dictionary['government_voice_relation'] = 'governed_by_S_and_verb_passive' 
                     else:
                         categorical_feature_dictionary['governed_by'] = 'VP'
                         for element in root.findall('.//terminal'):
                             if element.attrib.get('POS') == 'VBN':
                                 id = root.findall('.//terminal').index(element)
-                                if root.findall('.//terminal')[id-1].text in ['am','is','are','was','were','been','be']:
+                                if root.findall('.//terminal')[id-1].text.lower() in ['am','is','are','was','were','been','be']:
                                     categorical_feature_dictionary['government_voice_relation'] = 'governed_by_VP_and_verb_passive'
-                                    
-       
-            
+
             # get dependency label of the current token 
             categorical_feature_dictionary['dependency_label'] = word.deprel
-            
-            
+
             #get dependents: tokens, pos_tags, lemmas
             dependents_tokens = []
             dependents_POS = []      
@@ -186,8 +195,7 @@ def extract_features(doc):
                     categorical_feature_dictionary["dependents_tokens"] = dependents_tokens
                     categorical_feature_dictionary["dependents_POS"] = dependents_POS
                     categorical_feature_dictionary["dependents_lemmas"] = dependents_lemmas
-                    
-                    
+
             #get path length
             cur_head_id = deprel_dict[word.id]
             path_length = 0
@@ -195,7 +203,6 @@ def extract_features(doc):
                 cur_head_id = deprel_dict[cur_head_id]
                 path_length += 1
             categorical_feature_dictionary['path_length_to_head'] = path_length
-            
 
             # append the feature dictionary to the list of feature dictionaries
             categorical_feature_dictionaries.append(categorical_feature_dictionary)
