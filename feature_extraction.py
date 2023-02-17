@@ -102,7 +102,7 @@ def get_whole_constituent(tree, word):
             whole_constituent = parent.findall(".//terminal")
                
             for element2 in whole_constituent:
-                constituent_tokens.append(element2.text)
+                constituent_tokens.append(element2.text.lower())
                 constituent_pos.append(element2.get('POS'))
                                
                 
@@ -133,7 +133,6 @@ def extract_features(doc):
         #for each word in the sentence, map word id to head id
         deprel_dict = {word.id: word.head for word in sentence.words}
         # print(deprel_dict)
-        
         
         for word in sentence.words:
 
@@ -189,9 +188,9 @@ def extract_features(doc):
             dependents_lemmas = []
             for word2 in sentence.words:
                 if word2.head == word.id: 
-                    dependents_tokens.append(word2.text)
+                    dependents_tokens.append(word2.text.lower())
                     dependents_POS.append(word2.xpos)
-                    dependents_lemmas.append(word2.lemma)
+                    dependents_lemmas.append(word2.lemma.lower())
                     categorical_feature_dictionary["dependents_tokens"] = dependents_tokens
                     categorical_feature_dictionary["dependents_POS"] = dependents_POS
                     categorical_feature_dictionary["dependents_lemmas"] = dependents_lemmas
