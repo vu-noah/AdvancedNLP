@@ -178,7 +178,7 @@ def extract_features(doc):
                     categorical_feature_dictionary["dependents_POS"] = dependents_POS
             
             # get dependency label of the current token 
-            categorical_feature_dictionary['dependency label'] = word.deprel
+            categorical_feature_dictionary['dependency_label'] = word.deprel
 
             # append the feature dictionary to the list of feature dictionaries
             categorical_feature_dictionaries.append(categorical_feature_dictionary)
