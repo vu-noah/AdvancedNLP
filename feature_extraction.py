@@ -80,17 +80,22 @@ def get_phrase_type(tree, word):
             return parent.tag
         
     
+    
 def get_whole_constituent(tree, word):
     constituent_tokens = []
     constituent_pos = []
     for element in tree.iter():
         if element.text == word.text and int(element.get('index')) == word.id-1:
             parent = element.getparent()
-            whole_constituent = parent.findall("terminal")
+            if word.text == 'misunderstanding':
+                print('!!!!!')
+                print(parent, parent.tag)
+                print(parent.findall(".//terminal"))
+            whole_constituent = parent.findall(".//terminal")
                
-            if len(whole_constituent) == 1:
-                constituent_tokens.append(whole_constituent[0].text)
-                constituent_pos.append(whole_constituent[0].get('POS'))
+            for element2 in whole_constituent:
+                constituent_tokens.append(element2.text)
+                constituent_pos.append(element2.get('POS'))
                                
                 
     return constituent_tokens, constituent_pos
