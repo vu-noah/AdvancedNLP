@@ -46,6 +46,7 @@ def parse_string_to_xml(node, constituent_tree_object):
 
     return node
 
+
 def add_attributes_to_xml(sentence, tree):
     
     head_id_dict = {}
