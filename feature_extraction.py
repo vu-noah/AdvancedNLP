@@ -53,7 +53,7 @@ def add_attributes_to_xml(sentence, tree):
     deprel_dict = {}
     for word in sentence.words:
         
-        head_id_dict[word.text] = str(word.head-1)
+        head_id_dict[word.text] = str(word.head)
         deprel_dict[word.text] = word.deprel
     
     index = 0
@@ -160,6 +160,17 @@ def extract_features(doc):
                                 id = root.findall('.//terminal').index(element)
                                 if root.findall('.//terminal')[id-1].text in ['am','is','are','was','were','been','be']:
                                     categorical_feature_dictionary['government_voice_relation'] = 'governed_by_VP_and_verb_passive'
+                                    
+                #get dependents: tokens, pos_tags
+                dependents_tokens = []
+                dependents_POS = []
+                if element.text != word.text and element.get("head_id") == str(word.id-1):
+                    
+                    dependents_tokens.append(element.text)
+                    dependents_POS.append(element.get("POS"))
+                    
+                    categorical_feature_dictionary["dependents_tokens"] = dependents_tokens
+                    categorical_feature_dictionary["dependents_POS"] = dependents_POS
             
             # get dependency label of the current token 
             categorical_feature_dictionary['dependency label'] = word.deprel
