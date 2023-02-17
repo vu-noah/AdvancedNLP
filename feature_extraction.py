@@ -187,7 +187,7 @@ def perform_feature_extraction(text):
 
 
 if __name__ == '__main__':
-    example_sentence = '''The chubby llama is eating a bunch of grass. Meanwhile, though no-one cared to tell him, a big misunderstanding took place.'''
+    example_sentence = '''The chubby lama is eating a bunch of grass. Meanwhile, though no-one cared to tell him, a big misunderstanding took place.'''
     perform_feature_extraction(example_sentence)
 
 # '''Everyone has the right to an effective remedy by the competent national tribunals for acts
