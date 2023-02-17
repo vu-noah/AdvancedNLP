@@ -126,13 +126,30 @@ def extract_features(doc):
         tree = parse_string_to_xml(root, sentence.constituency)
         add_attributes_to_xml(sentence, tree)
         # etree.dump(tree)
-
         
         # for each word in the sentence, map word id to head id
         deprel_dict = {word.id: word.head for word in sentence.words}
         # print(deprel_dict)
         
-        for word in sentence.words:
+        vp_indices, other_indices, distances_vp = [], [], []
+
+        for vp in root.findall('.//VP'):
+            for element in vp.findall('.//terminal'):
+                vp_indices.append(root.findall('.//terminal').index(element))
+
+        for element in root.findall('.//terminal'):
+            if root.findall('.//terminal').index(element) not in vp_indices:
+                other_indices.append(root.findall('.//terminal').index(element))
+
+        for i in range(len(other_indices)):
+            min_diff = abs(other_indices[i] - vp_indices[0])
+            for j in range(len(vp_indices)):
+                diff = abs(other_indices[i] - vp_indices[j])
+                if diff < min_diff:
+                    min_diff = diff          
+            distances_vp.append(min_diff)
+        
+        for word_id, word in enumerate(sentence.words):
 
             # create feature dictionaries for the word
             categorical_feature_dictionary = {'word': word.text.lower()}
@@ -204,6 +221,13 @@ def extract_features(doc):
                 cur_head_id = deprel_dict[cur_head_id]
                 path_length += 1
             numerical_feature_dictionary['path_length_to_head'] = path_length
+            
+            # get distance from the token to the VP
+            if word_id in vp_indices:
+                numerical_feature_dictionary['distance_to_VP'] = 0
+            else:
+                for i, j in zip(other_indices, distances_vp):
+                    numerical_feature_dictionary['distance_to_VP'] = j
 
             # append the feature dictionary to the list of feature dictionaries
             categorical_feature_dictionaries.append(categorical_feature_dictionary)
