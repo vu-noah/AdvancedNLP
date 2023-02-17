@@ -121,6 +121,12 @@ def extract_features(doc):
         add_attributes_to_xml(sentence, tree)
         etree.dump(tree)
 
+        
+        #for each word in the sentence, map word id to head id
+        deprel_dict = {word.id: word.head for word in sentence.words}
+        print(deprel_dict)
+        
+        
         for word in sentence.words:
 
             # create feature dictionaries for the word
@@ -184,6 +190,15 @@ def extract_features(doc):
                     categorical_feature_dictionary["dependents_tokens"] = dependents_tokens
                     categorical_feature_dictionary["dependents_POS"] = dependents_POS
                     categorical_feature_dictionary["dependents_lemmas"] = dependents_lemmas
+                    
+                    
+            #get path length
+            cur_head_id = deprel_dict[word.id]
+            path_length = 0
+            while cur_head_id != 0:
+                cur_head_id = deprel_dict[cur_head_id]
+                path_length += 1
+            categorical_feature_dictionary['path_length_to_head'] = path_length
             
 
             # append the feature dictionary to the list of feature dictionaries
