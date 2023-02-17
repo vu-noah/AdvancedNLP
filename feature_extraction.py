@@ -105,7 +105,6 @@ def get_whole_constituent(tree, word):
             for element2 in whole_constituent:
                 constituent_tokens.append(element2.text.lower())
                 constituent_pos.append(element2.get('POS'))
-                               
                 
     return constituent_tokens, constituent_pos
 
