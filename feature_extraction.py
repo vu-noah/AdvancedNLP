@@ -93,7 +93,7 @@ def get_whole_constituent(tree, word):
                 
             if len(whole_constituent) == 1:
                 constituent_tokens.append(whole_constituent[0].text)
-                constituent_pos.append(whole.constituent[0].get('POS'))
+                constituent_pos.append(whole_constituent[0].get('POS'))
                                
                 
     return constituent_tokens, constituent_pos
