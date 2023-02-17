@@ -121,7 +121,7 @@ def extract_features(doc):
 
     for sentence in doc.sentences:
 
-        print(sentence.constituency.pretty_print())
+        # print(sentence.constituency.pretty_print())
 
         sentence_token_list = [word.text for word in sentence.words]
         root = etree.Element("sentence")
@@ -132,14 +132,14 @@ def extract_features(doc):
         
         #for each word in the sentence, map word id to head id
         deprel_dict = {word.id: word.head for word in sentence.words}
-        print(deprel_dict)
+        # print(deprel_dict)
         
         
         for word in sentence.words:
 
             # create feature dictionaries for the word
             categorical_feature_dictionary = {'word': word.text.lower()}
-            binary_feature_dictionary = {}
+            numerical_feature_dictionary = {}
 
             # get the head of the token
             if word.head != 0:
@@ -150,9 +150,9 @@ def extract_features(doc):
 
             # check whether the token is the root
             if word.head == 0:
-                binary_feature_dictionary['is_root'] = 1
+                numerical_feature_dictionary['is_root'] = 1
             else:
-                binary_feature_dictionary['is_root'] = 0
+                numerical_feature_dictionary['is_root'] = 0
 
             # get the phrase type of the phrase the current token belongs to
             categorical_feature_dictionary['phrase_type'] = get_phrase_type(tree, word)
@@ -202,11 +202,11 @@ def extract_features(doc):
             while cur_head_id != 0:
                 cur_head_id = deprel_dict[cur_head_id]
                 path_length += 1
-            categorical_feature_dictionary['path_length_to_head'] = path_length
+            numerical_feature_dictionary['path_length_to_head'] = path_length
 
             # append the feature dictionary to the list of feature dictionaries
             categorical_feature_dictionaries.append(categorical_feature_dictionary)
-            binary_feature_dictionaries.append(binary_feature_dictionary)
+            binary_feature_dictionaries.append(numerical_feature_dictionary)
 
     return zip(categorical_feature_dictionaries, binary_feature_dictionaries)
 
