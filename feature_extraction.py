@@ -21,7 +21,6 @@ def process_text(text):
 
 def parse_string_to_xml(node, constituent_tree_object):
     """
-
     :param node:
     :param constituent_tree_object:
     :return:
@@ -49,7 +48,6 @@ def parse_string_to_xml(node, constituent_tree_object):
 
 def add_attributes_to_xml(sentence, tree):
     """
-
     :param sentence:
     :param tree:
     :return:
@@ -104,7 +102,6 @@ def get_distances_to_VP(root):
 
 def get_phrase_type(tree, word):
     """
-
     :param tree:
     :param word:
     :return:
@@ -118,7 +115,6 @@ def get_phrase_type(tree, word):
     
 def get_whole_constituent(tree, word):
     """
-
     :param tree:
     :param word:
     :return:
