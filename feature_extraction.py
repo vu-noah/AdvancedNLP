@@ -87,10 +87,6 @@ def get_whole_constituent(tree, word):
     for element in tree.iter():
         if element.text == word.text and int(element.get('index')) == word.id-1:
             parent = element.getparent()
-            if word.text == 'misunderstanding':
-                print('!!!!!')
-                print(parent, parent.tag)
-                print(parent.findall(".//terminal"))
             whole_constituent = parent.findall(".//terminal")
                
             for element2 in whole_constituent:
