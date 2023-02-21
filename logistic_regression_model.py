@@ -21,8 +21,8 @@ def run_logreg(X_train_cat, X_train_num, y_train, X_test_cat, X_test_num, y_test
     X_test_cat_vectorized = dv.transform(X_test_cat)
     
     # vactorize numerical features 
-    X_train_num_vectorized = numpy.array(X_train_num)
-    X_test_num_vectorized = numpy.array(X_test_num)
+    X_train_num_vectorized = np.array(X_train_num)
+    X_test_num_vectorized = np.array(X_test_num)
     
     # concatenate (TO DO)
     X_train_vectorized = 
