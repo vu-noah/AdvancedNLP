@@ -34,6 +34,12 @@ def extract_features_to_determine_candidates(filepath):
         categorical_feature_dict['UPOS'] = df['UPOS'][i]
         categorical_feature_dict['POS'] = df['POS'][i]
 
+        # extract whether the token is a NE (check whether UPOS is PROPN)
+        if df['UPOS'][i] == 'PROPN':
+            numerical_feature_dict['is_NE'] = 1
+        else:
+            numerical_feature_dict['is_NE'] = 0
+
         # append the feature dicts to the list
         categorical_feature_dicts.append(categorical_feature_dict)
         numerical_feature_dicts.append(numerical_feature_dict)
@@ -48,6 +54,5 @@ if __name__ == '__main__':
     # test the code
     for tup in feature_dicts_test:
         print(tup)
-        break
 
 
