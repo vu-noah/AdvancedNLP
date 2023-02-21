@@ -46,11 +46,52 @@ def preprocess_dataset(filepath):
         is_not_0 = df[target_row] != 0
         filtered_df = df[is_not_0]
         new_df = filtered_df.iloc[:, [n for n in range(11)] + [target_row]].copy()
-        # append the filtered dataframe (containing the first 11 columns + the target column) to a csv file
+        # append the filtered dataframe (containing the first 11 columns + the target column and candidate column) to a
+        # csv file
         new_df.to_csv(f'Data/{datatype}_data.tsv', sep='\t', mode='a', header=False)
         print(f'{datatype.title()} dataframe with target column {target_row+1} written to file.')
+
+
+def get_gold_candidates(filepath):
+    """
+    Read in the previously processed file, check whether the token is marked as a gold candidate and store this
+    information in a new column.
+
+    :param str filepath: path to previously preprocessed file
+    :return: None
+    """
+    if 'train' in filepath:
+        datatype = 'train'
+    elif 'test' in filepath:
+        datatype = 'test'
+    else:
+        print('No compatible file detected.')
+        quit()
+
+    df = pd.read_csv(filepath, sep='\t', header=None, names=['token_global_id', 'token_id_in_sent', 'token', 'lemma',
+                                                             'UPOS', 'POS', 'grammar', 'head_id', 'dependency_label',
+                                                             'head_dependency_relation', 'additional_info',
+                                                             'proposition', 'semantic_role'])
+
+    candidates = []
+
+    # check the semantic_role column, if it's not empty nor marked as 'V', token has to be a gold SR candidate
+    for SR in df['semantic_role']:
+        if all([SR != 'V', SR != '_']):
+            candidates.append(1)
+        else:
+            candidates.append(0)
+
+    df['is_candidate'] = candidates
+    print('Candidates determined.')
+
+    # overwrite the files with the dataframe that has the new column
+    df.to_csv(f'Data/{datatype}_data.tsv', sep='\t', mode='w', header=False)
+    print(f'{datatype.title()} dataframe with candidate column written to file.')
 
 
 if __name__ == '__main__':
     preprocess_dataset('Data/en_ewt-up-train.conllu')
     preprocess_dataset('Data/en_ewt-up-test.conllu')
+    get_gold_candidates('Data/train_data.tsv')
+    get_gold_candidates('Data/test_data.tsv')
