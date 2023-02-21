@@ -46,11 +46,9 @@ def preprocess_dataset(filepath):
     candidates = [0 for _ in df[0]]
     for i in range(longest_line_length-11):
         target_row = 11+i
-        # print(target_row)
         for j, SR in enumerate(df[target_row]):
             if SR != 'V' and SR != '_' and SR != 0:
                 candidates[j] = 1
-                # print(j, SR)
 
     df[candidate_column] = candidates
 
