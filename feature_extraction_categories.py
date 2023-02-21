@@ -5,7 +5,7 @@
 import pandas as pd
 
 
-def extract_features_to_determine_categories(filepath):
+def extract_features_to_determine_roles(filepath):
     """
     Extract features for SR candidate tokens (predicted in the previous step).
 
@@ -37,10 +37,11 @@ def extract_features_to_determine_categories(filepath):
 
 
 if __name__ == '__main__':
-    # feature_dicts_train = extract_features_to_determine_categories('Data/train_data_with_candidate_predictions.tsv')
-    feature_dicts_test = extract_features_to_determine_categories('Data/test_data_with_candidate_predictions.tsv')
+    # roles_feature_dicts_train = \
+    # extract_features_to_determine_roles('Data/train_data_with_candidate_predictions.tsv')
+    roles_feature_dicts_test = \
+        extract_features_to_determine_roles('Data/test_data_with_candidate_predictions.tsv')
 
     # test the code
-    for tup in feature_dicts_test:
+    for tup in roles_feature_dicts_test:
         print(tup)
-        break

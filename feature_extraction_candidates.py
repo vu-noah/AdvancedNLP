@@ -15,7 +15,7 @@ def extract_features_to_determine_candidates(filepath):
     df = pd.read_csv(filepath, sep='\t', header=None, names=['token_global_id', 'token_id_in_sent', 'token', 'lemma',
                                                              'UPOS', 'POS', 'grammar', 'head_id', 'dependency_label',
                                                              'head_dependency_relation', 'additional_info',
-                                                             'proposition', 'semantic_role'])
+                                                             'proposition', 'semantic_role', 'is_candidate'])
 
     print(df)
 
@@ -48,11 +48,11 @@ def extract_features_to_determine_candidates(filepath):
 
 
 if __name__ == '__main__':
-    # feature_dicts_train = extract_features_to_determine_candidates('Data/train_data.tsv')
-    feature_dicts_test = extract_features_to_determine_candidates('Data/test_data.tsv')
+    # candidate_feature_dicts_train = extract_features_to_determine_candidates('Data/train_data.tsv')
+    candidate_feature_dicts_test = extract_features_to_determine_candidates('Data/test_data.tsv')
 
     # test the code
-    for tup in feature_dicts_test:
+    for tup in candidate_feature_dicts_test:
         print(tup)
 
 
