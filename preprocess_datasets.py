@@ -4,41 +4,53 @@
 
 import pandas as pd
 
-line_lenghts = set()
 
-with open('Data/en_ewt-up-test.conllu', encoding='utf-8') as infile:
-    content = infile.readlines()
-    lines = [line.strip('\n').split('\t') for line in content]
-    for line in lines:
-        line_lenghts.add(len(line))
+def preprocess_dataset(filepath):
+    """
+    Preprocess a dataset in the .conllu format. Duplicate sentences with more than one event and append them at the end
+    of a new file to be written.
+    :param filepath: path to original dataset
+    :return: None
+    """
+    # read in the dataset, check for longest line
+    if 'train' in filepath:
+        datatype = 'train'
+    elif 'test' in filepath:
+        datatype = 'test'
+    else:
+        print('No compatible file detected.')
+        quit()
 
-longest_line_length = max(line_lenghts)
+    line_lenghts = set()
 
-df = pd.read_csv('Data/en_ewt-up-test.conllu', encoding='utf-8', sep='\t',
-                 names=[n for n in range(longest_line_length)])
+    with open(filepath, encoding='utf-8') as infile:
+        content = infile.readlines()
+        lines = [line.strip('\n').split('\t') for line in content]
+        for line in lines:
+            line_lenghts.add(len(line))
+    print(f'Original {datatype} dataset read in.')
 
-df = df.fillna(0)
+    longest_line_length = max(line_lenghts)
+    print(f'Longest line in original dataset has {longest_line_length} columns.')
 
-for i in range(longest_line_length-11):
-    is_not_0 = df[10+i] != 0
-    filtered_df = df[is_not_0]
-    new_df = filtered_df.iloc[:, [n for n in range(11)] + [11+i]].copy()
-    print(new_df)
+    # read in the dataset with pandas, define as many columns as there are in the longest line
+    df = pd.read_csv(filepath, encoding='utf-8', sep='\t',
+                     names=[n for n in range(longest_line_length)])
 
-# c11_is_not_0 = df[11] != 0
-# df_1 = df[c11_is_not_0]
-# df_1 = df_1.iloc[:,[n for n in range(11)] + [11]].copy()
-#
-# print(df_1)
-#
-# c12_is_not_0 = df[12] != 0
-# df_2 = df[c12_is_not_0]
-# df_2 = df_2.iloc[:,[n for n in range(11)] + [12]].copy()
-#
-# print(df_2)
-#
-# c13_is_not_0 = df[13] != 0
-# df_3 = df[c13_is_not_0]
-# df_3 = df_3.iloc[:,[n for n in range(11)] + [13]].copy()
-#
-# print(df_3)
+    # fill NaN values with 0s for easier processing
+    df = df.fillna(0)
+
+    # retrieve the first 11 columns always, retrieve the target column (starting from 12 up to length of longest line)
+    for i in range(longest_line_length-11):
+        target_row = 11+i
+        is_not_0 = df[target_row] != 0
+        filtered_df = df[is_not_0]
+        new_df = filtered_df.iloc[:, [n for n in range(11)] + [target_row]].copy()
+        # append the filtered dataframe (containing the first 11 columns + the target column) to a csv file
+        new_df.to_csv(f'Data/{datatype}_data', sep='\t', mode='a', header=False)
+        print(f'{datatype.title()} dataframe with target column {target_row+1} written to file.')
+
+
+if __name__ == '__main__':
+    preprocess_dataset('Data/en_ewt-up-train.conllu')
+    preprocess_dataset('Data/en_ewt-up-test.conllu')
