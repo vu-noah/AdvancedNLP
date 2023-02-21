@@ -47,7 +47,7 @@ def preprocess_dataset(filepath):
         filtered_df = df[is_not_0]
         new_df = filtered_df.iloc[:, [n for n in range(11)] + [target_row]].copy()
         # append the filtered dataframe (containing the first 11 columns + the target column) to a csv file
-        new_df.to_csv(f'Data/{datatype}_data', sep='\t', mode='a', header=False)
+        new_df.to_csv(f'Data/{datatype}_data.tsv', sep='\t', mode='a', header=False)
         print(f'{datatype.title()} dataframe with target column {target_row+1} written to file.')
 
 
