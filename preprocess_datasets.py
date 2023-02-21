@@ -60,7 +60,8 @@ def preprocess_dataset(filepath):
         filtered_df = df[is_not_0]
         new_df = filtered_df.iloc[:, [n for n in range(11)] + [target_row, candidate_column]].copy()
 
-        ### gets candidates only for current proposition, alternative to "retrieve candidates" block above
+        ### gets candidates only for current proposition, alternative to "retrieve candidates" block above, previous
+        ## version
         # candidates = [1 if c != 'V' and c != '_' else 0 for c in new_df[target_row]]
         # new_df['is_candidate'] = candidates
         ###
