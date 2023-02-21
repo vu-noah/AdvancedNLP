@@ -9,7 +9,7 @@ def preprocess_dataset(filepath):
     """
     Preprocess a dataset in the .conllu format. Duplicate sentences with more than one event and append them at the end
     of a new file to be written.
-    :param filepath: path to original dataset
+    :param str filepath: path to original dataset
     :return: None
     """
     # read in the dataset, check for longest line
