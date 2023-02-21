@@ -8,7 +8,8 @@ import pandas as pd
 def preprocess_dataset(filepath):
     """
     Preprocess a dataset in the .conllu format. Duplicate sentences with more than one event and append them at the end
-    of a new file to be written.
+    of a new file to be written. Include a new column with a binary value for whether the token is labelled as an ARG in
+    the gold data.
     :param str filepath: path to original dataset
     :return: None
     """
@@ -28,9 +29,10 @@ def preprocess_dataset(filepath):
         lines = [line.strip('\n').split('\t') for line in content]
         for line in lines:
             line_lenghts.add(len(line))
+    # noinspection PyUnboundLocalVariable
     print(f'Original {datatype} dataset read in.')
 
-    longest_line_length = max(line_lenghts)
+    longest_line_length = candidate_column = max(line_lenghts)
     print(f'Longest line in original dataset has {longest_line_length} columns.')
 
     # read in the dataset with pandas, define as many columns as there are in the longest line
@@ -40,23 +42,37 @@ def preprocess_dataset(filepath):
     # fill NaN values with 0s for easier processing
     df = df.fillna(0)
 
+    # retrieve candidates
+    candidates = [0 for _ in df[0]]
+    for i in range(longest_line_length-11):
+        target_row = 11+i
+        # print(target_row)
+        for j, SR in enumerate(df[target_row]):
+            if SR != 'V' and SR != '_' and SR != 0:
+                candidates[j] = 1
+                # print(j, SR)
+
+    df[candidate_column] = candidates
+
     # retrieve the first 11 columns always, retrieve the target column (starting from 12 up to length of longest line)
     # also retrieve whether the current token is a gold candidate for a SR (i.e. labelled as an ARG)
     for i in range(longest_line_length-11):
         target_row = 11+i
         is_not_0 = df[target_row] != 0
         filtered_df = df[is_not_0]
-        new_df = filtered_df.iloc[:, [n for n in range(11)] + [target_row]].copy()
-        candidates = [1 if c != 'V' and c != '_' else 0 for c in new_df[target_row]]
-        new_df['is_candidate'] = candidates
+        new_df = filtered_df.iloc[:, [n for n in range(11)] + [target_row, candidate_column]].copy()
+
+        ### gets candidates only for current proposition, alternative to "retrieve candidates" block above
+        # candidates = [1 if c != 'V' and c != '_' else 0 for c in new_df[target_row]]
+        # new_df['is_candidate'] = candidates
+        ###
+
         # append the filtered dataframe (containing the first 11 columns + the target column + the candidate column) to
         # a csv file
         new_df.to_csv(f'Data/{datatype}_data.tsv', sep='\t', mode='a', header=False)
-        print(f'{datatype.title()} dataframe with target column {target_row+1} written to file.')
+        print(f'{datatype.title()} dataframe with target column {target_row+1} and candidate column written to file.')
 
 
 if __name__ == '__main__':
     preprocess_dataset('Data/en_ewt-up-train.conllu')
     preprocess_dataset('Data/en_ewt-up-test.conllu')
-    # get_gold_candidates('Data/train_data.tsv')
-    # get_gold_candidates('Data/test_data.tsv')
