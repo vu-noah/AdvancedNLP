@@ -9,7 +9,7 @@ def preprocess_dataset(filepath):
     """
     Preprocess a dataset in the .conllu format. Duplicate sentences with more than one event and append them at the end
     of a new file to be written. Include a new column with a binary value for whether the token is labelled as an ARG in
-    the gold data.
+    the gold data. Include a column for the sentence id.
     :param str filepath: path to original dataset
     :return: None
     """
