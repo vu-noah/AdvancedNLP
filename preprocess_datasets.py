@@ -13,7 +13,7 @@ def preprocess_dataset(filepath):
     :param str filepath: path to original dataset
     :return: None
     """
-    # read in the dataset, check for longest line
+    # assign variables for train resp. test files, read in the dataset, check for longest line
     if 'train' in filepath:
         datatype = 'train'
     elif 'test' in filepath:
@@ -42,14 +42,16 @@ def preprocess_dataset(filepath):
     # fill NaN values with 0s for easier processing
     df = df.fillna(0)
 
-    # retrieve candidates
+    # create a list with zeros, the number of these zeros being equivalent to the number of rows in the dataframe, 
+    # retrieve candidates for a Semantic Role (SR) for each token in the dataset (not being an empty cell, a verb, or an underscore),
+    # and replace for each of these candidates the zero with an 1 in the corresponding position in the list
     candidates = [0 for _ in df[0]]
     for i in range(longest_line_length-11):
         target_row = 11+i
         for j, SR in enumerate(df[target_row]):
             if SR != 'V' and SR != '_' and SR != 0:
                 candidates[j] = 1
-
+    # append this list to the dataframe as a new column 'candidate_column_index'. Each token that is a candidate for a SR has value 1 in this column, and non-candidates have value 0.  
     df[candidate_column_index] = candidates
 
     # map sent_id to tokens
@@ -59,7 +61,8 @@ def preprocess_dataset(filepath):
 
     # define a new list that will later act as a sent id column that will be appended to the df
     sent_ids_column = [sent_ids_series[0], sent_ids_series[0]]
-    # iterare over the filter dataframe (starting from the first actual token)
+    
+    # iterate over the filter dataframe (starting from the first actual token)
     for boolean in is_sent_id.tolist()[2:]:
         if boolean is False:
             # if row is not a sentence id itself, take the first sentence id from the list of sentence ids and append
@@ -68,16 +71,19 @@ def preprocess_dataset(filepath):
         else:  # otherwise if it is a sentence id, go to the next sent id in the sentence id and append this one
             sent_ids_series.pop(0)
             sent_ids_column.append(sent_ids_series[0])
-
+            
+    # check to make sure that there is only one sentence id left in sent_ids_series
     assert len(sent_ids_series) == 1, 'More than the final sentence id leftover.'
+    
+    # check to make sure that the length of the dataframe and the sent_ids_column are the same
     assert len(df[0]) == len(sent_ids_column), 'Length of dataframe and sent_id column isn\'t the same.'
 
-    # append new column to df
+    # append new column 'sent_id_column' to df
     sent_id_column = candidate_column_index+1
     df[sent_id_column] = sent_ids_column
 
     # retrieve the first 11 columns always, retrieve the target column (starting from 12 up to length of longest line)
-    # also retrieve whether the current token is a gold candidate for a SR (i.e. labelled as an ARG)
+    # also retrieve whether the current token is a gold candidate for an SR (i.e. labelled as an ARG)
     for i in range(longest_line_length-11):
         target_row = 11+i
         is_not_0 = df[target_row] != 0
