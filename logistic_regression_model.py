@@ -20,18 +20,20 @@ def run_logreg(X_train_cat, X_train_num, y_train, X_test_cat, X_test_num, y_test
     X_train_cat_vectorized = dv.fit_transform(X_train_cat)
     X_test_cat_vectorized = dv.transform(X_test_cat)
     
-    # vactorize numerical features 
+    # vectorize numerical features 
     X_train_num_vectorized = np.array(X_train_num)
     X_test_num_vectorized = np.array(X_test_num)
     
-    # concatenate (TO DO)
+    # concatenate categorical and numerical features (TO DO)
     X_train_vectorized = 
     X_test_vectorized = 
     
-    # run the model
+    # instantiate the model and fit it to the concatenated features and the gold labels of the training data
     model = LogisticRegression(max_iter=10000)
     model.fit(X_train_vectorized, y_train)
 
+    # use the fitted model to make predictions for the concatenated features of the test data
     y_pred = model.predict(X_test_vectorized)
-
+    
+    # print classification report for the gold labels vs. the predicted labels of the test data
     print(classification_report(y_test, y_pred, digits = 3))
