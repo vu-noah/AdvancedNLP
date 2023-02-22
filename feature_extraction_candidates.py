@@ -15,8 +15,9 @@ def extract_features_to_determine_candidates(filepath):
     df = pd.read_csv(filepath, sep='\t', header=None, names=['token_global_id', 'token_id_in_sent', 'token', 'lemma',
                                                              'UPOS', 'POS', 'grammar', 'head_id', 'dependency_label',
                                                              'head_dependency_relation', 'additional_info',
-                                                             'proposition', 'semantic_role', 'is_candidate'])
+                                                             'proposition', 'semantic_role', 'is_candidate', 'sent_id'])
 
+    pd.set_option('display.max_columns', None)
     print(df)
 
     categorical_feature_dicts = []
@@ -40,6 +41,8 @@ def extract_features_to_determine_candidates(filepath):
         else:
             numerical_feature_dict['is_NE'] = 0
 
+        print(categorical_feature_dict, numerical_feature_dict)
+
         # append the feature dicts to the list
         categorical_feature_dicts.append(categorical_feature_dict)
         numerical_feature_dicts.append(numerical_feature_dict)
@@ -54,5 +57,3 @@ if __name__ == '__main__':
     # test the code
     for tup in candidate_feature_dicts_test:
         print(tup)
-
-
