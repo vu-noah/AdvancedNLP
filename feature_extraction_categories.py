@@ -13,7 +13,8 @@ def extract_features_to_determine_roles(filepath):
     :return: zip object (categorical_feature_dicts, numerical_feature_dicts)
     """
     # read in the tsv file (that has no header row), assign column names, and store the data in a pandas dataframe  
-    df = pd.read_csv(filepath, sep='\t', header=None, names=['token_global_id', 'token_id_in_sent', 'token', 'lemma',
+    df = pd.read_csv(filepath, sep='\t', header=None, names=['token_individual_id', 'token_global_id',
+                                                             'token_id_in_sent', 'token', 'lemma',
                                                              'UPOS', 'POS', 'grammar', 'head_id', 'dependency_label',
                                                              'head_dependency_relation', 'additional_info',
                                                              'PB_predicate', 'semantic_role', 'is_candidate', 'sent_id',
