@@ -14,8 +14,9 @@ def extract_features_to_determine_candidates(filepath):
     df = pd.read_csv(filepath, sep='\t', header=None, names=['token_global_id', 'token_id_in_sent', 'token', 'lemma',
                                                              'UPOS', 'POS', 'grammar', 'head_id', 'dependency_label',
                                                              'head_dependency_relation', 'additional_info',
-                                                             'PB_predicate', 'semantic_role', 'is_candidate', 'sent_id'])
-
+                                                             'PB_predicate', 'semantic_role', 'is_candidate', 'sent_id',
+                                                             'current_predicate', 'global_sent_id'],
+                     quotechar='ą', engine='python')
 
 
     categorical_feature_dicts = []
@@ -23,6 +24,7 @@ def extract_features_to_determine_candidates(filepath):
     
     for group in df.groupby("sent_id", sort = False):
         sent_df = group[1]
+
         # sent_df is a dataframe similar to the df above, but only contains the current sentence
         for i, row in sent_df.iterrows():
 
@@ -43,7 +45,8 @@ def extract_features_to_determine_candidates(filepath):
                     # find row(s) in the dataframe whose token id equals the current token's head id
                     head_lemmas = sent_df.loc[sent_df['token_id_in_sent'] == int(head_id)]
                     categorical_feature_dict['lemma_of_head'] = head_lemmas.iloc[0]['lemma']
-                # if the current token is the root, the above gives an IndexError; in that case we add 'None' to the feature dict
+                # if the current token is the root, the above gives an IndexError; in that case we add 'None' to the
+                # feature dict
                 except IndexError:
                     categorical_feature_dict['lemma_of_head'] = None
             else:
@@ -66,6 +69,7 @@ def extract_features_to_determine_candidates(filepath):
 
 if __name__ == '__main__':
     candidate_feature_dicts_train = extract_features_to_determine_candidates('Data/train_data.tsv')
+    candidate_feature_dicts_test = extract_features_to_determine_candidates('Data/test_data.tsv')
 
     # test the code
     for tup in candidate_feature_dicts_test:
