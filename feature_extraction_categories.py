@@ -16,7 +16,9 @@ def extract_features_to_determine_roles(filepath):
                                                              'upos', 'pos', 'grammar', 'head_id', 'dependency_label',
                                                              'head_dependency_relation', 'additional_info',
                                                              'PB_predicate', 'semantic_role', 'is_candidate', 'sent_id',
-                                                             'candidate_prediction'])
+                                                             'current_predicate', 'global_sent_id',
+                                                             'candidate_prediction'],
+                     quotechar='ą', engine='python')
 
     print(df)
 
