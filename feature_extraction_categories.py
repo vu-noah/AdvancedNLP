@@ -35,24 +35,24 @@ def extract_features_to_determine_roles(filepath):
 
                     categorical_feature_dict = {}
                     numerical_feature_dict = {}
-
-                    # 1) get the distance from the token to the closest predicate 
+                    
                     sent.append(row['token'])
                     predicates.append(row['PB_predicate'])
+                    
+                # 1) get the distance from the token to the closest predicate 
+                # find the indices of the predicates
+                predicate_indices = [i for i, pred in enumerate(predicates) if pred != '_']
 
-                    # find the indices of the predicates
-                    predicate_indices = [i for i, pred in enumerate(predicates) if pred != '_']
+                # calculate the distance between each token and the predicates
+                for i, token in enumerate(sent):
+                    if predicates[i] != '_':
+                        # if the token is a predicate, the distance is 0
+                        distance = 0
+                    else:
+                        # if the token is not a predicate, find the closest predicate
+                        distance = min(abs(i - index) for index in predicate_indices)
 
-                    # calculate the distance between each token and the predicates
-                    for i, token in enumerate(sent):
-                        if predicates[i] != '_':
-                            # if the token is a predicate, the distance is 0
-                            distance = 0
-                        else:
-                            # if the token is not a predicate, find the closest predicate
-                            distance = min(abs(i - index) for index in predicate_indices)
-
-                        numerical_feature_dict['distance_to_PB_predicate'] = distance
+                    numerical_feature_dict['distance_to_PB_predicate'] = distance
 
                     # append the feature dicts to the list
                     categorical_feature_dicts.append(categorical_feature_dict)
