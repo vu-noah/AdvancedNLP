@@ -22,6 +22,7 @@ def extract_features_to_determine_roles(filepath):
 
     categorical_feature_dicts = []
     numerical_feature_dicts = []
+    sentence_level_features = []
             
     for i, token in enumerate(df['token']):
         if df['candidate_prediction'][i] == 1:
@@ -29,10 +30,15 @@ def extract_features_to_determine_roles(filepath):
             for group in df.groupby('sent_id', sort = False):
                 sent_df = group[1]
                 
+                sentence, predicates = [], []
+                
                 for i, row in sent_df.iterrows():
 
                     categorical_feature_dict = {}
                     numerical_feature_dict = {}
+                    
+                    sentence.append(row['token'])
+                    predicates.append(row['PB_predicate'])
                     
                     # 1) get voice of the predicate 
                     if row['grammar'] == 'Tense=Past|VerbForm=Part|Voice=Pass':
@@ -47,8 +53,24 @@ def extract_features_to_determine_roles(filepath):
                     # append the feature dicts to the list
                     categorical_feature_dicts.append(categorical_feature_dict)
                     numerical_feature_dicts.append(numerical_feature_dict)
+                
+                # 2) get the distance from the token to the closest predicate         
+                predicate_indices = [i for i, predicate in enumerate(predicates) if predicate != '_']
 
-    return zip(categorical_feature_dicts, numerical_feature_dicts)
+                for i, token in enumerate(sentence):
+
+                    distance_feature_dict = {}
+
+                    if predicates[i] != '_':
+                        distance_feature_dict['distance_to_predicate'] = 0
+                    else:
+                        distance = min(abs(i - index) for index in predicate_indices)
+                        distance_feature_dict['distance_to_predicate'] = distance
+
+                    # append the feature dicts to the list
+                    sentence_level_features.append(distance_feature_dict)
+                    
+    return zip(categorical_feature_dicts, sentence_level_features, numerical_feature_dicts)
 
 
 if __name__ == '__main__':
