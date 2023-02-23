@@ -65,11 +65,11 @@ def extract_features_to_determine_candidates(filepath):
 
             print(categorical_feature_dict, numerical_feature_dict)
 
-            # append the feature dicts to the list
+            # append the feature dicts to the lists
             categorical_feature_dicts.append(categorical_feature_dict)
             numerical_feature_dicts.append(numerical_feature_dict)
 
-    #return a zip with the three lists filled with feature dicts
+    #return a zip with the two lists filled with feature dicts
     return zip(categorical_feature_dicts, numerical_feature_dicts)
 
 # extract the features to determine the candidates
