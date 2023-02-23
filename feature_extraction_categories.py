@@ -20,7 +20,8 @@ def extract_features_to_determine_roles(filepath):
                                                              'PB_predicate', 'semantic_role', 'is_candidate', 'sent_id',
                                                              'current_predicate', 'global_sent_id',
                                                              'candidate_prediction'],
-                     quotechar='ą', engine='python')
+                     quotechar='ą', engine='python')  # by setting 'quotechar' to a letter that is not part of the tsv file, 
+                                                      # we make sure that nothing is counted as a quotechar (to solve the errors with punctuation chars in italics) 
 
     # print(df)
     
