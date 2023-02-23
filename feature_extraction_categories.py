@@ -40,7 +40,21 @@ def extract_features_to_determine_roles(filepath):
                     sentence.append(row['token'])
                     predicates.append(row['PB_predicate'])
                     
-                    # 1) get voice of the predicate 
+                    # 1) extract the lemma of the current token and lemma of head 
+                    categorical_feature_dict['lemma'] = row['lemma'] 
+
+                    head_id = row['head_id']
+                    
+                    if head_id.isdigit():
+                        try:
+                            head_lemmas = sent_df.loc[sent_df['token_id_in_sent'] == int(head_id)]
+                            categorical_feature_dict['lemma_of_head'] = head_lemmas.iloc[0]['lemma']
+                        except IndexError:
+                            categorical_feature_dict['lemma_of_head'] = '_'
+                    else:
+                        categorical_feature_dict['lemma_of_head'] = head_id
+
+                    # 2) get voice of the predicate 
                     if row['grammar'] == 'Tense=Past|VerbForm=Part|Voice=Pass':
                         categorical_feature_dict['voice'] = 'passive'
 
@@ -54,7 +68,7 @@ def extract_features_to_determine_roles(filepath):
                     categorical_feature_dicts.append(categorical_feature_dict)
                     numerical_feature_dicts.append(numerical_feature_dict)
                 
-                # 2) get the distance from the token to the closest predicate         
+                # 3) get the distance from the token to the closest predicate         
                 predicate_indices = [i for i, predicate in enumerate(predicates) if predicate != '_']
 
                 for i, token in enumerate(sentence):
