@@ -18,7 +18,7 @@ def extract_features_to_determine_roles(filepath):
                                                              'PB_predicate', 'semantic_role', 'is_candidate', 'sent_id',
                                                              'candidate_prediction'])
 
-    print(df)
+    #print(df)
 
     categorical_feature_dicts = []
     numerical_feature_dicts = []
@@ -29,15 +29,10 @@ def extract_features_to_determine_roles(filepath):
             for group in df.groupby('sent_id', sort = False):
                 sent_df = group[1]
                 
-                sent, predicates = [], []
-                
                 for i, row in sent_df.iterrows():
 
                     categorical_feature_dict = {}
                     numerical_feature_dict = {}
-                    
-                    sent.append(row['token'])
-                    predicates.append(row['PB_predicate'])
                     
                     # 1) get voice of the predicate 
                     if row['grammar'] == 'Tense=Past|VerbForm=Part|Voice=Pass':
@@ -48,21 +43,6 @@ def extract_features_to_determine_roles(filepath):
 
                     else:
                         categorical_feature_dict['voice'] = '_'
-                    
-                # 2) get the distance from the token to the closest predicate 
-                # find the indices of the predicates
-                predicate_indices = [i for i, pred in enumerate(predicates) if pred != '_']
-
-                # calculate the distance between each token and the predicates
-                for i, token in enumerate(sent):
-                    if predicates[i] != '_':
-                        # if the token is a predicate, the distance is 0
-                        distance = 0
-                    else:
-                        # if the token is not a predicate, find the closest predicate
-                        distance = min(abs(i - index) for index in predicate_indices)
-
-                    numerical_feature_dict['distance_to_PB_predicate'] = distance
 
                     # append the feature dicts to the list
                     categorical_feature_dicts.append(categorical_feature_dict)
