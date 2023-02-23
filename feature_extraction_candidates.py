@@ -8,7 +8,6 @@ import pandas as pd
 def extract_features_to_determine_candidates(filepath):
     """
     Extract features for determining whether a token is a SR candidate.
-
     :param str filepath: the path to the preprocessed file
     :return: zip object (categorical_feature_dicts, numerical_feature_dicts)
     """
@@ -17,42 +16,64 @@ def extract_features_to_determine_candidates(filepath):
                                                              'head_dependency_relation', 'additional_info',
                                                              'proposition', 'semantic_role', 'is_candidate', 'sent_id'])
 
-    pd.set_option('display.max_columns', None)
-    print(df)
+
 
     categorical_feature_dicts = []
     numerical_feature_dicts = []
+    
+    for group in df.groupby("sent_id", sort = False):
+        sent_df = group[1]
+        #sent_df is a dataframe similar to the df above, but only contains the current sentence
+        for i, row in sent_df.iterrows():
 
-    for i, token in enumerate(df['token']):
+            categorical_feature_dict = {}
+            numerical_feature_dict = {}
 
-        categorical_feature_dict = {}
-        numerical_feature_dict = {}
+            # extract the lemma of the current token
+            categorical_feature_dict['lemma'] = row['lemma']
 
-        # extract the lemma of the current token
-        categorical_feature_dict['lemma'] = df['lemma'][i]
+            # extract the POS of the current token
+            categorical_feature_dict['UPOS'] = row['UPOS']
+            categorical_feature_dict['POS'] = row['POS']
+        
 
-        # extract the POS of the current token
-        categorical_feature_dict['UPOS'] = df['UPOS'][i]
-        categorical_feature_dict['POS'] = df['POS'][i]
+            #exctract the lemma of the head of the current token
+            head_id = row['head_id']
+            try:
+                #find row(s) in the dataframe whose token id equals the current token's head id
+                head_lemmas = df2.loc[df2['token_id_in_sent'] == int(head_id)]
+                categorical_feature_dict['lemma_of_head'] = head_lemmas.iloc[0]['lemma']
+            except IndexError:
+                categorical_feature_dict['lemma_of_head'] = None
+            
+            # extract whether the token is a NE (check whether UPOS is PROPN)
+            if row['UPOS'] == 'PROPN':
+                numerical_feature_dict['is_NE'] = 1
+            else:
+                numerical_feature_dict['is_NE'] = 0
 
-        # extract whether the token is a NE (check whether UPOS is PROPN)
-        if df['UPOS'][i] == 'PROPN':
-            numerical_feature_dict['is_NE'] = 1
-        else:
-            numerical_feature_dict['is_NE'] = 0
+            print(categorical_feature_dict, numerical_feature_dict)
+            
+            #extract the lemma of the head of the current token
+            try:
+                #find row(s) in the dataframe whose token id equals the current token's head id, add the lemma of that row to the feature dict
+                head_lemmas = df2.loc[df2['token_id_in_sent'] == int(row['head_id'])]
+                categorical_feature_dict['lemma_of_head'] = head_lemmas.iloc[0]['lemma']
+                
+            #if the current token is the root, the above gives an IndexError; in that case we add 'None' to the feature dict
+            except IndexError:
+                categorical_feature_dict['lemma_of_head'] = None
+                
 
-        print(categorical_feature_dict, numerical_feature_dict)
-
-        # append the feature dicts to the list
-        categorical_feature_dicts.append(categorical_feature_dict)
-        numerical_feature_dicts.append(numerical_feature_dict)
+            # append the feature dicts to the list
+            categorical_feature_dicts.append(categorical_feature_dict)
+            numerical_feature_dicts.append(numerical_feature_dict)
 
     return zip(categorical_feature_dicts, numerical_feature_dicts)
 
 
 if __name__ == '__main__':
-    # candidate_feature_dicts_train = extract_features_to_determine_candidates('Data/train_data.tsv')
-    candidate_feature_dicts_test = extract_features_to_determine_candidates('Data/test_data.tsv')
+    candidate_feature_dicts_train = extract_features_to_determine_candidates('data/train_data.tsv')
 
     # test the code
     for tup in candidate_feature_dicts_test:
