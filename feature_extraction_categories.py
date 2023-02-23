@@ -12,6 +12,7 @@ def extract_features_to_determine_roles(filepath):
     :param str filepath: the path to the file with the candidate predictions
     :return: zip object (categorical_feature_dicts, numerical_feature_dicts)
     """
+    # read in the tsv file (that has no header row), assign column names, and store the data in a pandas dataframe  
     df = pd.read_csv(filepath, sep='\t', header=None, names=['token_global_id', 'token_id_in_sent', 'token', 'lemma',
                                                              'UPOS', 'POS', 'grammar', 'head_id', 'dependency_label',
                                                              'head_dependency_relation', 'additional_info',
@@ -19,34 +20,41 @@ def extract_features_to_determine_roles(filepath):
                                                              'candidate_prediction'])
 
     # print(df)
-
+    
+    # create three empty lists to put the feature dicts in later
     categorical_feature_dicts = []
     numerical_feature_dicts = []
     sentence_level_feature_dicts = []
             
+    # check whether a token has been predicted as a candidate for an SR (if so, the value in 'candidate_prediction' = 1)
     for i, token in enumerate(df['token']):
         if df['candidate_prediction'][i] == 1:
             
+            # create a dataframe for each sentence (i.e. rows with the same sent_id) in the same order as the original file 
             for group in df.groupby('sent_id', sort = False):
                 sent_df = group[1]
                 
+                # for each sentence, create two empty lists to put in the tokens (belonging to the sentence and to the predicate, respectively) in later
                 sentence, predicates = [], []
                 
+                # for each token in the sentence:   
                 for i, row in sent_df.iterrows():
-
+                    
+                    # create 2 dicts to store the categorical and numerical features in later
                     categorical_feature_dict = {}
                     numerical_feature_dict = {}
                     
+                    # append the token and the predicate to the two empty lists
                     sentence.append(row['token'])
                     predicates.append(row['PB_predicate'])
                     
-                    # 1) extract lemma of the current token and lemma of head 
-                    # 2) extract POS of the current token and POS of head 
+                    # 1) extract lemma and PoS of the current token 
                     categorical_feature_dict['lemma'] = row['lemma'] 
 
                     categorical_feature_dict['UPOS'] = row['UPOS']
                     categorical_feature_dict['POS'] = row['POS']
-
+                    
+                    # 2) extract lemma and POS of the head 
                     head_id = row['head_id']
                     
                     if head_id.isdigit():
@@ -64,7 +72,7 @@ def extract_features_to_determine_roles(filepath):
                         categorical_feature_dict['UPOS_of_head'] = head_id
                         categorical_feature_dict['POS_of_head'] = head_id
 
-                    # 3) get voice of the predicate 
+                    # 3) obtain voice of the predicate and fill the feature dict 'voice' with the values specified below.
                     if row['grammar'] == 'Tense=Past|VerbForm=Part|Voice=Pass':
                         categorical_feature_dict['voice'] = 'passive'
 
@@ -78,25 +86,33 @@ def extract_features_to_determine_roles(filepath):
                     categorical_feature_dicts.append(categorical_feature_dict)
                     numerical_feature_dicts.append(numerical_feature_dict)
                 
-                # 4) get the distance from the token to the closest predicate         
+                # 4) get the distance from the token to the closest predicate
+                # create a list of indexes that have a predicate
                 predicate_indices = [i for i, predicate in enumerate(predicates) if predicate != '_']
-
+                
+                # for each index and token in the sentence list: 
                 for i, token in enumerate(sentence):
-
+                    
+                    # create an empty dict to put the distance feature in later
                     distance_feature_dict = {}
 
+                    # if the token is a predicate, fill the dict with value 0
                     if predicates[i] != '_':
                         distance_feature_dict['distance_to_predicate'] = 0
+                        
+                    # otherwise, obtain the distance from the token to the closest predicate,
+                    # by calculating the lowest distance between the index of the token on one hand and each of the indexes of the predicate_indices list on the other hand
                     else:
                         distance = min(abs(i - index) for index in predicate_indices)
                         distance_feature_dict['distance_to_predicate'] = distance
 
-                    # append the feature dicts to the list
+                    # append the feature dict to the list
                     sentence_level_feature_dicts.append(distance_feature_dict)
-                    
+      
+    #return a zip with the three lists filled with feature dicts
     return zip(categorical_feature_dicts, sentence_level_feature_dicts, numerical_feature_dicts)
 
-
+# extract the features to determine the SR of the candidates
 if __name__ == '__main__':
     # roles_feature_dicts_train = \
     # extract_features_to_determine_roles('Data/train_data_with_candidate_predictions.tsv')
