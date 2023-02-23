@@ -73,7 +73,7 @@ def extract_features_to_determine_candidates(filepath):
 
 
 if __name__ == '__main__':
-    candidate_feature_dicts_train = extract_features_to_determine_candidates('data/train_data.tsv')
+    candidate_feature_dicts_train = extract_features_to_determine_candidates('Data/train_data.tsv')
 
     # test the code
     for tup in candidate_feature_dicts_test:
