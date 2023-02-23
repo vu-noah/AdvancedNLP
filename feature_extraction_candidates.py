@@ -23,7 +23,7 @@ def extract_features_to_determine_candidates(filepath):
     
     for group in df.groupby("sent_id", sort = False):
         sent_df = group[1]
-        #sent_df is a dataframe similar to the df above, but only contains the current sentence
+        # sent_df is a dataframe similar to the df above, but only contains the current sentence
         for i, row in sent_df.iterrows():
 
             categorical_feature_dict = {}
@@ -36,15 +36,18 @@ def extract_features_to_determine_candidates(filepath):
             categorical_feature_dict['UPOS'] = row['UPOS']
             categorical_feature_dict['POS'] = row['POS']
         
-
-            #exctract the lemma of the head of the current token
+            # exctract the lemma of the head of the current token
             head_id = row['head_id']
-            try:
-                #find row(s) in the dataframe whose token id equals the current token's head id
-                head_lemmas = df2.loc[df2['token_id_in_sent'] == int(head_id)]
-                categorical_feature_dict['lemma_of_head'] = head_lemmas.iloc[0]['lemma']
-            except IndexError:
-                categorical_feature_dict['lemma_of_head'] = None
+            if head_id.isdigit():
+                try:
+                    # find row(s) in the dataframe whose token id equals the current token's head id
+                    head_lemmas = sent_df.loc[sent_df['token_id_in_sent'] == int(head_id)]
+                    categorical_feature_dict['lemma_of_head'] = head_lemmas.iloc[0]['lemma']
+                # if the current token is the root, the above gives an IndexError; in that case we add 'None' to the feature dict
+                except IndexError:
+                    categorical_feature_dict['lemma_of_head'] = None
+            else:
+                categorical_feature_dict['lemma_of_head'] = head_id
             
             # extract whether the token is a NE (check whether UPOS is PROPN)
             if row['UPOS'] == 'PROPN':
@@ -53,17 +56,6 @@ def extract_features_to_determine_candidates(filepath):
                 numerical_feature_dict['is_NE'] = 0
 
             print(categorical_feature_dict, numerical_feature_dict)
-            
-            #extract the lemma of the head of the current token
-            try:
-                #find row(s) in the dataframe whose token id equals the current token's head id, add the lemma of that row to the feature dict
-                head_lemmas = df2.loc[df2['token_id_in_sent'] == int(row['head_id'])]
-                categorical_feature_dict['lemma_of_head'] = head_lemmas.iloc[0]['lemma']
-                
-            #if the current token is the root, the above gives an IndexError; in that case we add 'None' to the feature dict
-            except IndexError:
-                categorical_feature_dict['lemma_of_head'] = None
-                
 
             # append the feature dicts to the list
             categorical_feature_dicts.append(categorical_feature_dict)
