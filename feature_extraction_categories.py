@@ -18,7 +18,7 @@ def extract_features_to_determine_roles(filepath):
                                                              'PB_predicate', 'semantic_role', 'is_candidate', 'sent_id',
                                                              'candidate_prediction'])
 
-    #print(df)
+    # print(df)
 
     categorical_feature_dicts = []
     numerical_feature_dicts = []
