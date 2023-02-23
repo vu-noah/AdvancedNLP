@@ -22,16 +22,40 @@ def extract_features_to_determine_roles(filepath):
 
     categorical_feature_dicts = []
     numerical_feature_dicts = []
-
+            
     for i, token in enumerate(df['token']):
         if df['candidate_prediction'][i] == 1:
+            
+            sent, predicates = [], []
+            
+            for group in df.groupby('sent_id', sort = False):
+                sent_df = group[1]
+                for i, row in sent_df.iterrows():
 
-            categorical_feature_dict = {}
-            numerical_feature_dict = {}
+                categorical_feature_dict = {}
+                numerical_feature_dict = {}
+                
+                # 1) get the distance from the token to the closest predicate 
+                sent.append(row['token'])
+                predicates.append(row['PB_predicate'])
 
-            # append the feature dicts to the list
-            categorical_feature_dicts.append(categorical_feature_dict)
-            numerical_feature_dicts.append(numerical_feature_dict)
+                # find the indices of the predicates
+                predicate_indices = [i for i, pred in enumerate(predicates) if pred != '_']
+
+                # calculate the distance between each token and the predicates
+                for i, token in enumerate(sent):
+                    if predicates[i] != '_':
+                        # if the token is a predicate, the distance is 0
+                        distance = 0
+                    else:
+                        # if the token is not a predicate, find the closest predicate
+                        distance = min(abs(i - index) for index in predicate_indices)
+
+                    numerical_feature_dict['distance_to_PB_predicate'] = distance
+
+                # append the feature dicts to the list
+                categorical_feature_dicts.append(categorical_feature_dict)
+                numerical_feature_dicts.append(numerical_feature_dict)
 
     return zip(categorical_feature_dicts, numerical_feature_dicts)
 
