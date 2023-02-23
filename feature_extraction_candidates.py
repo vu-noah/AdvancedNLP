@@ -36,14 +36,13 @@ def extract_features_to_determine_candidates(filepath):
             categorical_feature_dict = {}
             numerical_feature_dict = {}
 
-            # extract the lemma of the current token
+            # 1) extract the lemma and POS of the current token
             categorical_feature_dict['lemma'] = row['lemma']
 
-            # extract the POS of the current token
             categorical_feature_dict['UPOS'] = row['UPOS']
             categorical_feature_dict['POS'] = row['POS']
         
-            # extract the lemma of the head of the current token
+            # 2) extract the lemma of the head of the current token
             head_id = row['head_id']
             if head_id.isdigit():
                 try:
