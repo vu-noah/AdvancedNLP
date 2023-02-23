@@ -14,7 +14,7 @@ def extract_features_to_determine_candidates(filepath):
     df = pd.read_csv(filepath, sep='\t', header=None, names=['token_global_id', 'token_id_in_sent', 'token', 'lemma',
                                                              'UPOS', 'POS', 'grammar', 'head_id', 'dependency_label',
                                                              'head_dependency_relation', 'additional_info',
-                                                             'proposition', 'semantic_role', 'is_candidate', 'sent_id'])
+                                                             'PB_predicate', 'semantic_role', 'is_candidate', 'sent_id'])
 
 
 
