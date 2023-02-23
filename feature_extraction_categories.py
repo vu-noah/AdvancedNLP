@@ -39,7 +39,17 @@ def extract_features_to_determine_roles(filepath):
                     sent.append(row['token'])
                     predicates.append(row['PB_predicate'])
                     
-                # 1) get the distance from the token to the closest predicate 
+                    # 1) get voice of the predicate 
+                    if row['grammar'] == 'Tense=Past|VerbForm=Part|Voice=Pass':
+                        categorical_feature_dict['voice'] = 'passive'
+
+                    if row['PB_predicate'] != '_' and row['grammar'] != 'Tense=Past|VerbForm=Part|Voice=Pass':
+                        categorical_feature_dict['voice'] = 'active'
+
+                    else:
+                        categorical_feature_dict['voice'] = '_'
+                    
+                # 2) get the distance from the token to the closest predicate 
                 # find the indices of the predicates
                 predicate_indices = [i for i, pred in enumerate(predicates) if pred != '_']
 
