@@ -8,7 +8,7 @@ filepath = r'Data\test_data.tsv'
 df = pd.read_csv(filepath, sep='\t', header=None, names=['token_global_id', 'token_id_in_sent', 'token', 'lemma',
                                                          'upos', 'pos', 'grammar', 'head_id', 'dependency_label',
                                                          'head_dependency_relation', 'additional_info',
-                                                         'proposition', 'semantic_role', 'is_candidate', 'sent_id',
+                                                         'PB_predicate', 'semantic_role', 'is_candidate', 'sent_id',
                                                          'candidate_prediction'])
 
 def get_ner_type(df):
