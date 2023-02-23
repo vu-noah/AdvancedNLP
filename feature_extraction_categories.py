@@ -22,7 +22,7 @@ def extract_features_to_determine_roles(filepath):
 
     categorical_feature_dicts = []
     numerical_feature_dicts = []
-    sentence_level_features = []
+    sentence_level_feature_dicts = []
             
     for i, token in enumerate(df['token']):
         if df['candidate_prediction'][i] == 1:
@@ -92,9 +92,9 @@ def extract_features_to_determine_roles(filepath):
                         distance_feature_dict['distance_to_predicate'] = distance
 
                     # append the feature dicts to the list
-                    sentence_level_features.append(distance_feature_dict)
+                    sentence_level_feature_dicts.append(distance_feature_dict)
                     
-    return zip(categorical_feature_dicts, sentence_level_features, numerical_feature_dicts)
+    return zip(categorical_feature_dicts, sentence_level_feature_dicts, numerical_feature_dicts)
 
 
 if __name__ == '__main__':
