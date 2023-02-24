@@ -40,6 +40,8 @@ def extract_features_to_determine_roles(filepath):
                 
                 # for each sentence, create two empty lists to put in the tokens (belonging to the sentence and to the predicate, respectively) in later
                 sentence, predicates = [], []
+               
+                count = 0 # needed to extract the argument_order feature
                 
                 # for each token in the sentence:   
                 for i, row in sent_df.iterrows():
@@ -77,20 +79,26 @@ def extract_features_to_determine_roles(filepath):
                         categorical_feature_dict['POS_of_head'] = head_id
 
                     # 3) obtain voice of the predicate and fill the feature dict 'voice' with the values specified below.
-                    if row['grammar'] == 'Tense=Past|VerbForm=Part|Voice=Pass':
-                        categorical_feature_dict['voice'] = 'passive'
+                    # 4) obtain argument order and fill the feature dict 'argument_order' with the values specified below.
+                    if row['PB_predicate'] != '_':
+                        count = count + 1
+                        if row['grammar'] == 'Tense=Past|VerbForm=Part|Voice=Pass':
+                            categorical_feature_dict['voice'] = 'passive'
+                            categorical_feature_dict['argument_order'] = f'{count}_passive'
 
-                    if row['PB_predicate'] != '_' and row['grammar'] != 'Tense=Past|VerbForm=Part|Voice=Pass':
-                        categorical_feature_dict['voice'] = 'active'
+                        if row['grammar'] != 'Tense=Past|VerbForm=Part|Voice=Pass':
+                            categorical_feature_dict['voice'] = 'active'
+                            categorical_feature_dict['argument_order'] = f'{count}_active'
 
                     else:
                         categorical_feature_dict['voice'] = '_'
+                        categorical_feature_dict['argument_order'] = '_'
 
                     # append the feature dicts to the list
                     categorical_feature_dicts.append(categorical_feature_dict)
                     numerical_feature_dicts.append(numerical_feature_dict)
                 
-                # 4) get the distance from the token to the closest predicate
+                # 5) get the distance from the token to the closest predicate
                 # create a list of indexes that have a predicate
                 predicate_indices = [i for i, predicate in enumerate(predicates) if predicate != '_']
                 
