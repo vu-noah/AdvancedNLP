@@ -41,6 +41,6 @@ def extract_ner_and_phrase_type(filepath, outputpath):
     ner = pd.DataFrame(ner_dict) 
     ner.to_csv(outputpath, sep='\t', index=False)
     
-    if __name__ == '__main__':
-      extract_ner_and_phrase_type('Data\train_data.tsv', 'Data\train_data_ner.tsv')
-      extract_ner_and_phrase_type('Data\test_data.tsv', 'Data\test_data_ner.tsv')
+if __name__ == '__main__':
+    extract_ner_and_phrase_type('Data\train_data.tsv', 'Data\train_data_ner.tsv')
+    extract_ner_and_phrase_type('Data\test_data.tsv', 'Data\test_data_ner.tsv')
