@@ -17,7 +17,6 @@ def extract_ner_and_phrase_type(filepath, outputpath):
                                                              'candidate_prediction'],
                      quotechar='ą', engine='python')  
                                                              
-    
     ner_lebels = [] 
     
     count = 0
