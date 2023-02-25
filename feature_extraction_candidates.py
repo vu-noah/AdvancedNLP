@@ -29,6 +29,12 @@ def extract_features_to_determine_candidates(filepath):
     for group in df.groupby("global_sent_id", sort=False):
         sent_df = group[1]
 
+        # get the ids of all predicates in the sentence (for checking whether the token is an immediate child)
+        pb_predicate_ids = []
+        for i, row in sent_df.iterrows():
+            if row['PB_predicate'] != '_':
+                pb_predicate_ids.append(row['token_id_in_sent'])
+
         # for each token in the sentence:  
         for i, row in sent_df.iterrows():
             
@@ -61,6 +67,12 @@ def extract_features_to_determine_candidates(filepath):
                 numerical_feature_dict['is_NE'] = 1
             else:
                 numerical_feature_dict['is_NE'] = 0
+
+            # check if the current token is an immediate child of one of the predicates
+            if row['head_id'] in pb_predicate_ids:
+                numerical_feature_dict['immediate_child_of_pb_predicate'] = 1
+            else:
+                numerical_feature_dict['immediate_child_of_pb_predicate'] = 0
 
             print(categorical_feature_dict, numerical_feature_dict)
 
