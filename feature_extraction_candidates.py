@@ -18,15 +18,15 @@ def extract_features_to_determine_candidates(filepath):
                                                              'head_dependency_relation', 'additional_info',
                                                              'PB_predicate', 'semantic_role', 'is_candidate', 'sent_id',
                                                              'current_predicate', 'global_sent_id'],
-                     quotechar='ą', engine='python')  # by setting 'quotechar' to a letter that is not part of the tsv file, 
-                                                      # we make sure that nothing is counted as a quotechar (to solve the errors with punctuation chars in italics) 
+                     quotechar='ą', engine='python')  # by setting 'quotechar' to a letter that is not part of the tsv
+    # file, we make sure that nothing is counted as a quotechar (to solve the errors with punctuation chars in italics)
 
     # create two empty lists to put the feature dicts in later
     categorical_feature_dicts = []
     numerical_feature_dicts = []
     
     # create a dataframe for each sentence (i.e. rows with the same sent_id) in the same order as the original file 
-    for group in df.groupby("sent_id", sort = False):
+    for group in df.groupby("global_sent_id", sort=False):
         sent_df = group[1]
 
         # for each token in the sentence:  
@@ -68,7 +68,7 @@ def extract_features_to_determine_candidates(filepath):
             categorical_feature_dicts.append(categorical_feature_dict)
             numerical_feature_dicts.append(numerical_feature_dict)
 
-    #return a zip with the two lists filled with feature dicts
+    # return a zip with the two lists filled with feature dicts
     return zip(categorical_feature_dicts, numerical_feature_dicts)
 
 
