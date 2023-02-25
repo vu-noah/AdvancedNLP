@@ -37,24 +37,24 @@ def extract_features_to_determine_candidates(filepath):
             numerical_feature_dict = {}
 
             # 1) extract the lemma and POS of the current token
-            categorical_feature_dict['lemma'] = row['lemma']
+            categorical_feature_dict['lemma'] = row['lemma'].lower()
 
             categorical_feature_dict['UPOS'] = row['UPOS']
             categorical_feature_dict['POS'] = row['POS']
         
             # 2) extract the lemma of the head of the current token
             head_id = row['head_id']
-            if head_id.isdigit():
+            if str(head_id).isdigit():
                 try:
                     # find row(s) in the dataframe whose token id equals the current token's head id
                     head_lemmas = sent_df.loc[sent_df['token_id_in_sent'] == int(head_id)]
-                    categorical_feature_dict['lemma_of_head'] = head_lemmas.iloc[0]['lemma']
+                    categorical_feature_dict['lemma_of_head'] = head_lemmas.iloc[0]['lemma'].lower()
                 # if the current token is the root, the above gives an IndexError; in that case we add 'None' to the
                 # feature dict
                 except IndexError:
                     categorical_feature_dict['lemma_of_head'] = None
             else:
-                categorical_feature_dict['lemma_of_head'] = head_id
+                categorical_feature_dict['lemma_of_head'] = head_id.lower()
             
             # extract whether the token is a NE (check whether UPOS is PROPN)
             if row['UPOS'] == 'PROPN':
@@ -70,6 +70,7 @@ def extract_features_to_determine_candidates(filepath):
 
     #return a zip with the two lists filled with feature dicts
     return zip(categorical_feature_dicts, numerical_feature_dicts)
+
 
 # extract the features to determine the candidates
 if __name__ == '__main__':

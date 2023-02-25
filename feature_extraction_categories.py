@@ -35,7 +35,7 @@ def extract_features_to_determine_roles(filepath):
         if df['candidate_prediction'][i] == 1:
             
             # create a dataframe for each sentence (i.e. rows with the same sent_id) in the same order as the original file 
-            for group in df.groupby('sent_id', sort = False):
+            for group in df.groupby('sent_id', sort=False):  # does this group only have the candidate predictions in them?
                 sent_df = group[1]
                 
                 # for each sentence, create two empty lists to put in the tokens (belonging to the sentence and to the predicate, respectively) in later
