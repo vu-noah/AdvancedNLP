@@ -1,5 +1,4 @@
 from sklearn.feature_extraction import DictVectorizer
-import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
 from scipy.sparse import hstack
@@ -17,7 +16,7 @@ def concatenate_categorical_and_numerical_feature_vectors(categorical_vectors_ma
     return full_feature_vecs
 
 
-def run_logreg(X_train_cat_dicts, X_train_num_dicts, y_train, X_test_cat_dicts, X_test_num_dicts, y_test):
+def run_logreg(X_train_cat_dicts, X_train_num_dicts, y_train, X_test_cat_dicts, X_test_num_dicts, y_test, df_test):
     """
     Run Logistic Regression model.   
     
@@ -27,11 +26,14 @@ def run_logreg(X_train_cat_dicts, X_train_num_dicts, y_train, X_test_cat_dicts, 
     :param list[dict] X_test_cat_dicts: a list (of dicts) containing categorical features from test data
     :param list[dict] X_test_num_dicts: a list (of dicts) containing numerical features from test data
     :param list y_test: a list of gold labels from test data
+    :param pandas.Dataframe df_test: the test dataframe which will be used to store the candidate predictions
     """
     # vectorize categorical features
     dv = DictVectorizer()
     X_train_cat_vectorized = dv.fit_transform(X_train_cat_dicts)
+    print('Categorical training features vectorized.')
     X_test_cat_vectorized = dv.transform(X_test_cat_dicts)
+    print('Categorical test features vectorized.')
     
     # vectorize numerical features
     X_train_num_list = []
@@ -45,15 +47,25 @@ def run_logreg(X_train_cat_dicts, X_train_num_dicts, y_train, X_test_cat_dicts, 
     # concatenate categorical and numerical features
     X_train_vectorized = concatenate_categorical_and_numerical_feature_vectors(X_train_cat_vectorized,
                                                                                X_train_num_list)
+    print('Numerical and categorical training feature vectors concatenated.')
     X_test_vectorized = concatenate_categorical_and_numerical_feature_vectors(X_test_cat_vectorized,
                                                                               X_test_num_list)
+    print('Numerical and categorical test feature vectors concatenated.')
     
     # instantiate the model and fit it to the concatenated features and the gold labels of the training data
     model = LogisticRegression(max_iter=10000)
     model.fit(X_train_vectorized, y_train)
+    print('LogReg model trained.')
 
     # use the fitted model to make predictions for the concatenated features of the test data
     y_pred = model.predict(X_test_vectorized)
+    print('Predictions made.')
+
+    # write predictions to file, so we can extract features from the predicted candidates for the next step
+    df_test['candidate_prediction'] = y_pred
+    df_test.to_csv(f'Data/test_data_with_candidate_predictions.tsv', sep='\t', mode='w', header=False,
+                   index=False)
+    print('Predicted candidates for test data stored.')
     
     # print classification report for the gold labels vs. the predicted labels of the test data
     print(classification_report(y_test, y_pred, digits=3))

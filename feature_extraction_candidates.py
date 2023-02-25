@@ -81,6 +81,7 @@ def extract_features_to_determine_candidates(filepath):
             categorical_feature_dicts.append(categorical_feature_dict)
             numerical_feature_dicts.append(numerical_feature_dict)
 
+    print('Features extracted.')
     # return a zip with the two lists filled with feature dicts
     return df, categorical_feature_dicts, numerical_feature_dicts
 
@@ -97,4 +98,5 @@ if __name__ == '__main__':
     #     print(tup)
 
     run_logreg(candidate_cat_feature_dicts_train, candidate_num_feature_dicts_train, df_train['is_candidate'].tolist(),
-               candidate_cat_feature_dicts_test, candidate_num_feature_dicts_test, df_test['is_candidate'].tolist())
+               candidate_cat_feature_dicts_test, candidate_num_feature_dicts_test, df_test['is_candidate'].tolist(),
+               df_test)
