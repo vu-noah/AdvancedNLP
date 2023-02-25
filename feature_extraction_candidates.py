@@ -3,13 +3,14 @@
 # Advanced NLP Assignment 2
 
 import pandas as pd
+from logistic_regression_model import run_logreg
 
 
 def extract_features_to_determine_candidates(filepath):
     """
     Extract features for determining whether a token is a SR candidate.
     :param str filepath: the path to the preprocessed file
-    :return: zip object (categorical_feature_dicts, numerical_feature_dicts)
+    :return: tuple (df: pandas.Dataframe, categorical_feature_dicts: list[dict], numerical_feature_dicts: list[dict])
     """
     # read in the tsv file (that has no header row), assign column names, and store the data in a pandas dataframe
     df = pd.read_csv(filepath, sep='\t', header=None, names=['token_individual_id', 'token_global_id',
@@ -74,21 +75,26 @@ def extract_features_to_determine_candidates(filepath):
             else:
                 numerical_feature_dict['immediate_child_of_pb_predicate'] = 0
 
-            print(categorical_feature_dict, numerical_feature_dict)
+            # print(categorical_feature_dict, numerical_feature_dict)
 
             # append the feature dicts to the lists
             categorical_feature_dicts.append(categorical_feature_dict)
             numerical_feature_dicts.append(numerical_feature_dict)
 
     # return a zip with the two lists filled with feature dicts
-    return zip(categorical_feature_dicts, numerical_feature_dicts)
+    return df, categorical_feature_dicts, numerical_feature_dicts
 
 
 # extract the features to determine the candidates
 if __name__ == '__main__':
-    candidate_feature_dicts_train = extract_features_to_determine_candidates('Data/train_data.tsv')
-    candidate_feature_dicts_test = extract_features_to_determine_candidates('Data/test_data.tsv')
+    df_train, candidate_cat_feature_dicts_train, candidate_num_feature_dicts_train = \
+        extract_features_to_determine_candidates('Data/train_data.tsv')
+    df_test, candidate_cat_feature_dicts_test, candidate_num_feature_dicts_test = \
+        extract_features_to_determine_candidates('Data/test_data.tsv')
 
     # test the code
     # for tup in candidate_feature_dicts_test:
     #     print(tup)
+
+    run_logreg(candidate_cat_feature_dicts_train, candidate_num_feature_dicts_train, df_train['is_candidate'].tolist(),
+               candidate_cat_feature_dicts_test, candidate_num_feature_dicts_test, df_test['is_candidate'].tolist())

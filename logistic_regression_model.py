@@ -2,31 +2,51 @@ from sklearn.feature_extraction import DictVectorizer
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
+from scipy.sparse import hstack
 
 
-def run_logreg(X_train_cat, X_train_num, y_train, X_test_cat, X_test_num, y_test):
-    '''
+def concatenate_categorical_and_numerical_feature_vectors(categorical_vectors_matrix, numerical_vectors_list):
+    """
+    Concatenate the vectors obtained from DictVectorizer and the list of numerical feature vectors.
+    :param csr_matrix categorical_vectors_matrix: a matrix holding feature vectors compiled with DictVectorizer
+    :param list numerical_vectors_list: a list holding vectors for numerical features
+    :return: csr_matrix full_feature_vecs: a matrix of concatenated feature vectors
+    """
+    full_feature_vecs = hstack([categorical_vectors_matrix, numerical_vectors_list], format='csr')
+
+    return full_feature_vecs
+
+
+def run_logreg(X_train_cat_dicts, X_train_num_dicts, y_train, X_test_cat_dicts, X_test_num_dicts, y_test):
+    """
     Run Logistic Regression model.   
     
-    :param X_train_cat: a dictionary containing categorical features from training data
-    :param X_train_num: a list (of lists) containing numerical features from training data
-    :param y_train: a list of gold labels from training data 
-    :param X_test_cat: a dictionary containing categorical features from test data
-    :param X_test_num: a list (of lists) containing numerical features from test data
-    :param y_test: a list of gold labels from test data 
-    '''
+    :param list[dict] X_train_cat_dicts: a list (of dicts) containing categorical features from training data
+    :param list[dict] X_train_num_dicts: a list (of dicts) containing numerical features from training data
+    :param list y_train: a list of gold labels from training data
+    :param list[dict] X_test_cat_dicts: a list (of dicts) containing categorical features from test data
+    :param list[dict] X_test_num_dicts: a list (of dicts) containing numerical features from test data
+    :param list y_test: a list of gold labels from test data
+    """
     # vectorize categorical features
     dv = DictVectorizer()
-    X_train_cat_vectorized = dv.fit_transform(X_train_cat)
-    X_test_cat_vectorized = dv.transform(X_test_cat)
+    X_train_cat_vectorized = dv.fit_transform(X_train_cat_dicts)
+    X_test_cat_vectorized = dv.transform(X_test_cat_dicts)
     
-    # vectorize numerical features 
-    X_train_num_vectorized = np.array(X_train_num)
-    X_test_num_vectorized = np.array(X_test_num)
+    # vectorize numerical features
+    X_train_num_list = []
+    for numerical_dictionary in X_train_num_dicts:
+        X_train_num_list.append([v for v in numerical_dictionary.values()])
+
+    X_test_num_list = []
+    for numerical_dictionary in X_test_num_dicts:
+        X_test_num_list.append([v for v in numerical_dictionary.values()])
     
-    # concatenate categorical and numerical features (TO DO)
-    X_train_vectorized = 
-    X_test_vectorized = 
+    # concatenate categorical and numerical features
+    X_train_vectorized = concatenate_categorical_and_numerical_feature_vectors(X_train_cat_vectorized,
+                                                                               X_train_num_list)
+    X_test_vectorized = concatenate_categorical_and_numerical_feature_vectors(X_test_cat_vectorized,
+                                                                              X_test_num_list)
     
     # instantiate the model and fit it to the concatenated features and the gold labels of the training data
     model = LogisticRegression(max_iter=10000)
@@ -36,4 +56,4 @@ def run_logreg(X_train_cat, X_train_num, y_train, X_test_cat, X_test_num, y_test
     y_pred = model.predict(X_test_vectorized)
     
     # print classification report for the gold labels vs. the predicted labels of the test data
-    print(classification_report(y_test, y_pred, digits = 3))
+    print(classification_report(y_test, y_pred, digits=3))
