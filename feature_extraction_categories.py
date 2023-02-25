@@ -124,6 +124,7 @@ def extract_features_to_determine_roles(filepath):
     #return a zip with the three lists filled with feature dicts
     return zip(categorical_feature_dicts, sentence_level_feature_dicts, numerical_feature_dicts)
 
+
 # extract the features to determine the SR of the candidates
 if __name__ == '__main__':
     # roles_feature_dicts_train = \
