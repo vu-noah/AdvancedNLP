@@ -78,5 +78,5 @@ if __name__ == '__main__':
     candidate_feature_dicts_test = extract_features_to_determine_candidates('Data/test_data.tsv')
 
     # test the code
-    for tup in candidate_feature_dicts_test:
-        print(tup)
+    # for tup in candidate_feature_dicts_test:
+    #     print(tup)
