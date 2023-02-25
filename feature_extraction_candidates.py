@@ -52,7 +52,7 @@ def extract_features_to_determine_candidates(filepath):
                 # if the current token is the root, the above gives an IndexError; in that case we add 'None' to the
                 # feature dict
                 except IndexError:
-                    categorical_feature_dict['lemma_of_head'] = None
+                    categorical_feature_dict['lemma_of_head'] = 'token_is_root'
             else:
                 categorical_feature_dict['lemma_of_head'] = head_id.lower()
             
