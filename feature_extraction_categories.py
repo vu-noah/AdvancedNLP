@@ -8,6 +8,7 @@ from spacy.tokens import Doc
 
 nlp = spacy.load('en_core_web_sm')
 
+
 def extract_features_to_determine_roles(filepath):
     """
     Extract features for SR candidate tokens (predicted in the previous step).
@@ -160,7 +161,7 @@ def extract_features_to_determine_roles(filepath):
 # extract the features to determine the SR of the candidates
 if __name__ == '__main__':
     # roles_feature_dicts_train = \
-    # extract_features_to_determine_roles('Data/train_data_with_candidate_predictions.tsv')
+    # extract_features_to_determine_roles('Data/train_data_only_current_candidates.tsv')
     roles_feature_dicts_test = \
         extract_features_to_determine_roles('Data/test_data_with_candidate_predictions.tsv')
 
