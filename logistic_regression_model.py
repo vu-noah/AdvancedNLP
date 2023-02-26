@@ -63,7 +63,7 @@ def run_logreg(X_train_cat_dicts, X_train_num_dicts, y_train, X_test_cat_dicts, 
 
     # write predictions to file, so we can extract features from the predicted candidates for the next step
     df_test['candidate_prediction'] = y_pred
-    df_test.to_csv(f'Data/test_data_with_candidate_predictions_test.tsv', sep='\t', mode='w', header=True,
+    df_test.to_csv(f'Data/test_data_with_candidate_predictions.tsv', sep='\t', mode='w', header=True,
                    index=False)
     print('Predicted candidates for test data stored.')
     
