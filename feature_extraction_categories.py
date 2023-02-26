@@ -54,6 +54,7 @@ def extract_features_to_determine_roles(filepath):
             #Find the index of the current predicate for feature XXX)
             #we assume the current predicate is not the head (also used for feature XXX))
             cur_pred_is_head = False
+            cur_pred_is_passive = False
             #the iternum column holds a count that represents which copy of the sentence (and thus, which predicate) we are on
             predicate_iternum = list(sent_df['iternum'])[0]
             counter = 0
