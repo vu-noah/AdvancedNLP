@@ -9,6 +9,7 @@ from spacy.tokens import Doc
 nlp = spacy.load('en_core_web_sm')
 
 
+# noinspection PyAssignmentToLoopOrWithParameter
 def extract_features_to_determine_roles(filepath):
     """
     Extract features for SR candidate tokens (predicted in the previous step).
@@ -47,10 +48,10 @@ def extract_features_to_determine_roles(filepath):
                 sentence = list(sent_df['token'])
                 predicates = list(sent_df['PB_predicate'])
                 
-                count = 0 # needed to extract the argument_order feature
+                count = 0  # needed to extract the predicate_order feature
 
                 # for each token in the sentence:
-                for i, row in sent_df.iterrows():
+                for j, row in sent_df.iterrows():
 
                     # create 2 dicts to store the categorical and numerical features in later
                     categorical_feature_dict = {}
@@ -72,8 +73,8 @@ def extract_features_to_determine_roles(filepath):
                             categorical_feature_dict['lemma_of_head'] = head_lemmas.iloc[0]['lemma'].lower()
                             categorical_feature_dict['UPOS_of_head'] = head_lemmas.iloc[0]['UPOS']
                             categorical_feature_dict['POS_of_head'] = head_lemmas.iloc[0]['POS']
-                        # if the current token is the root, the above gives an IndexError; in that case we add 'None' to the
-                        # feature dict
+                        # if the current token is the root, the above gives an IndexError; in that case we add 'None'
+                        # to the feature dict
                         except IndexError:
                             categorical_feature_dict['lemma_of_head'] = 'token_is_root'
                             categorical_feature_dict['UPOS_of_head'] = 'token_is_root'
