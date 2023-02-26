@@ -16,15 +16,9 @@ def extract_features_to_determine_roles(filepath):
     :return: tuple df, categorical_feature_dicts, sentence_level_feature_dicts, numerical_feature_dicts
     """
     # read in the tsv file (that has no header row), assign column names, and store the data in a pandas dataframe  
-    df = pd.read_csv(filepath, sep='\t', header=None, names=['token_individual_id', 'token_global_id',
-                                                             'token_id_in_sent', 'token', 'lemma',
-                                                             'UPOS', 'POS', 'grammar', 'head_id', 'dependency_label',
-                                                             'head_dependency_relation', 'additional_info',
-                                                             'PB_predicate', 'semantic_role', 'is_candidate', 'sent_id',
-                                                             'current_predicate', 'global_sent_id',
-                                                             'candidate_prediction'],
-                     quotechar='ą', engine='python')  # by setting 'quotechar' to a letter that is not part of the tsv
-    # file, we make sure that nothing is counted as a quotechar (to solve the errors with punctuation chars in italics)
+    df = pd.read_csv(filepath, sep='\t', header=0, quotechar='ą', engine='python')  # by setting 'quotechar' to a letter
+    # that is not part of the tsv file, we make sure that nothing is counted as a quotechar (to solve the errors with
+    # punctuation chars in italics)
 
     # print(df)
     

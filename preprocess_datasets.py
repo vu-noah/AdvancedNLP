@@ -89,6 +89,7 @@ def preprocess_dataset(filepath):
     # retrieve the first 11 columns always, retrieve the target column (starting from 12 up to length of longest line)
     # also retrieve whether the current token is a gold candidate for an SR (i.e. labelled as an ARG)
     for i in range(longest_line_length-11):
+        iternum = i
         target_row = 11+i
         is_not_0 = df[target_row] != 0
         filtered_df = df[is_not_0]
@@ -104,6 +105,7 @@ def preprocess_dataset(filepath):
         # version
         candidates = [1 if c != 'V' and c != '_' else 0 for c in new_df[target_row]]
         new_df['is_candidate'] = candidates
+        new_df['iternum'] = [iternum for _ in range(len(new_df[0]))]
         ##
 
         # append the filtered dataframe (containing the first 11 columns + the target column + the candidate column +
@@ -129,8 +131,8 @@ def preprocess_dataset(filepath):
                          names=['token_global_id', 'token_id_in_sent', 'token', 'lemma',
                                 'UPOS', 'POS', 'grammar', 'head_id', 'dependency_label',
                                 'head_dependency_relation', 'additional_info',
-                                'PB_predicate', 'semantic_role', 'sent_id', 'is_candidate'])  # change order sent_id and
-        # is_candidate if other candidate version
+                                'PB_predicate', 'semantic_role', 'sent_id', 'is_candidate', 'iternum'])  # change order
+        # sent_id and is_candidate if other candidate version
 
         # create containers, a dictionary mapping a sentence id to all predicates that appear within this sentence, a
         # predicate column holding the current predicate that will be appended to the df, a global sent id column that
@@ -180,7 +182,8 @@ def preprocess_dataset(filepath):
             df['global_sent_id'] = global_sent_id_column[:-135] + [40481 for _ in range(135)]
 
         # overwrite old files with new information
-        df.to_csv(f'Data/{datatype}_data_only_current_candidates.tsv', sep='\t', mode='w', header=False)
+        df.to_csv(f'Data/{datatype}_data_only_current_candidates.tsv', sep='\t', mode='w', header=True,
+                  index_label='token_individual_id')
 
     add_column_for_unique_sent_id_and_current_predicate(datatype)
 
