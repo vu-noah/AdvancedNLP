@@ -76,10 +76,13 @@ def extract_features_to_determine_roles(filepath):
 
                     if head_id.isdigit():
                         try:
+                            # find row(s) in the dataframe whose token id equals the current token's head id
                             head_lemmas = sent_df.loc[sent_df['token_id_in_sent'] == int(head_id)]
                             categorical_feature_dict['lemma_of_head'] = head_lemmas.iloc[0]['lemma'].lower()
                             categorical_feature_dict['UPOS_of_head'] = head_lemmas.iloc[0]['UPOS']
                             categorical_feature_dict['POS_of_head'] = head_lemmas.iloc[0]['POS']
+                        # if the current token is the root, the above gives an IndexError; in that case we add 'None' to the
+                        # feature dict
                         except IndexError:
                             categorical_feature_dict['lemma_of_head'] = 'token_is_root'
                             categorical_feature_dict['UPOS_of_head'] = 'token_is_root'
