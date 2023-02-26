@@ -43,10 +43,10 @@ def extract_features_to_determine_roles(filepath):
                 # predictions in them?
                 sent_df = group[1]
 
-                # for each sentence, create two empty lists to put in the tokens (belonging to the sentence and to the
-                # predicate, respectively) in later
-                sentence, predicates = [], []
-
+                # Create a list of tokens and predicates, for feature 6) and 7)
+                sentence = list(sent_df['token'])
+                predicates = list(sent_df['predicates'])
+=
                 count = 0 # needed to extract the argument_order feature
 
                 # for each token in the sentence:
@@ -55,10 +55,6 @@ def extract_features_to_determine_roles(filepath):
                     # create 2 dicts to store the categorical and numerical features in later
                     categorical_feature_dict = {}
                     numerical_feature_dict = {}
-
-                    # append the token and the predicate to the two empty lists
-                    sentence.append(row['token'])
-                    predicates.append(row['PB_predicate'])
 
                     # 1) extract lemma and PoS of the current token
                     categorical_feature_dict['lemma'] = row['lemma'].lower()
