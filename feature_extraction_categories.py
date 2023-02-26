@@ -45,7 +45,7 @@ def extract_features_to_determine_roles(filepath):
 
                 # Create a list of tokens and predicates, for feature 6) and 7)
                 sentence = list(sent_df['token'])
-                predicates = list(sent_df['predicates'])
+                predicates = list(sent_df['PB_predicate'])
                 
                 count = 0 # needed to extract the argument_order feature
 
