@@ -65,7 +65,10 @@ def extract_features_to_determine_roles(filepath):
                 else:
                     if counter == predicate_iternum:
                         cur_pred_id_in_sent = row['token_id_in_sent']
-                            #if the predicate is also the head, we set cur_pred_is_head to True
+                        #if the predicate is passive, we set cur_pred_is_passive to True
+                        if "Voice=Pass" in row['grammar']:
+                            cur_pred_is_passive = True
+                        #if the predicate is also the head, we set cur_pred_is_head to True
                         if row['head_id'] == 0:
                             cur_pred_is_head = True
                             break
@@ -112,28 +115,36 @@ def extract_features_to_determine_roles(filepath):
                     else:
                         numerical_feature_dict['is_NE'] = 0
 
+#                     # 4) obtain voice of the predicate and fill the feature dict 'voice' with the values specified below
+#                     # 5) obtain predicate order and fill the feature dict 'predicate_order' with the values specified
+#                     # below (argument order still needs to be done)
+#                     if row['PB_predicate'] != '_':
+#                         count = count + 1
+#                         if row['grammar'] == 'Tense=Past|VerbForm=Part|Voice=Pass':
+#                             categorical_feature_dict['voice'] = 'passive'
+#                             categorical_feature_dict['predicate_order'] = f'{count}_passive'
+
+#                         if row['grammar'] != 'Tense=Past|VerbForm=Part|Voice=Pass':
+#                             categorical_feature_dict['voice'] = 'active'
+#                             categorical_feature_dict['predicate_order'] = f'{count}_active'
+#                     else:
+#                         categorical_feature_dict['voice'] = '_'
+#                         categorical_feature_dict['predicate_order'] = '_'
+                        
                     # 4) obtain voice of the predicate and fill the feature dict 'voice' with the values specified below
-
-                    # !!! we still need to do a feature that captures the voice of the current predicate only !!!#
-
                     # 5) obtain predicate order and fill the feature dict 'predicate_order' with the values specified
                     # below (argument order still needs to be done)
-                    # if row['PB_predicate'] != '_':
-                    #     count = count + 1
-                    #     if row['grammar'] == 'Tense=Past|VerbForm=Part|Voice=Pass':
-                    #         categorical_feature_dict['voice'] = 'passive'
-                    #         categorical_feature_dict['predicate_order'] = f'{count}_passive'
-                    #
-                    #     if row['grammar'] != 'Tense=Past|VerbForm=Part|Voice=Pass':
-                    #         categorical_feature_dict['voice'] = 'active'
-                    #         categorical_feature_dict['predicate_order'] = f'{count}_active'
-                    # else:
-                    #     categorical_feature_dict['voice'] = '_'
-                    #     categorical_feature_dict['predicate_order'] = '_'
+                    if cur_pred_is_passive:
+                        count += 1
+                        categorical_feature_dict['voice'] = 'passive'
+                        categorical_feature_dict['predicate_order'] = f'{count}_passive'
+                    else: 
+                        categorical_feature_dict['voice'] = '_'
+                        categorical_feature_dict['predicate_order'] = '_'
                     
                     # 6) get the distance to the current predicate
                     cur_index = row['token_id_in_sent']
-                    distance = cur_pred_id_in_sent - cur_index
+                    distance = cur_pred_id_in_sent-cur_index
                     numerical_feature_dict['distance_to_predicate'] = distance
                     
                     # 7) binary feature to determine whether the token is before or after predicate
@@ -143,7 +154,8 @@ def extract_features_to_determine_roles(filepath):
                     if distance < 0:
                         #token is after the predicate
                         numerical_feature_dict['before_predicate'] = 0
-
+                    
+                    
                     # 8) get the NE type of the token
                     for token in nlp(doc):
                     # if the token is a NE, get its NE tag
@@ -155,6 +167,7 @@ def extract_features_to_determine_roles(filepath):
                             
                     categorical_feature_dict['NE_type'] = NE_type
 
+        
                     # 9) Get the dependency path from current token to current predicate
                     dependency_path_to_pred = []
 
