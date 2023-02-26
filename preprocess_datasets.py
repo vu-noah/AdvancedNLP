@@ -48,15 +48,15 @@ def preprocess_dataset(filepath):
     # retrieve candidates for a Semantic Role (SR) for each token in the dataset (not being an empty cell, a verb, or
     # an underscore), and replace for each of these candidates the zero with an 1 in the corresponding position in the
     # list
-    candidates = [0 for _ in df[0]]
-    for i in range(longest_line_length-11):
-        target_row = 11+i
-        for j, SR in enumerate(df[target_row]):
-            if SR != 'V' and SR != '_' and SR != 0:
-                candidates[j] = 1
+    # candidates = [0 for _ in df[0]]
+    # for i in range(longest_line_length-11):
+    #     target_row = 11+i
+    #     for j, SR in enumerate(df[target_row]):
+    #         if SR != 'V' and SR != '_' and SR != 0:
+    #             candidates[j] = 1
     # append this list to the dataframe as a new column 'candidate_column_index'. Each token that is a candidate for a
     # SR has value 1 in this column, and non-candidates have value 0.
-    df[candidate_column_index] = candidates
+    # df[candidate_column_index] = candidates
 
     # map sent_id to tokens
     # filter dataframe for all rows that contain a sentence id and get a list of sentence ids
@@ -83,7 +83,7 @@ def preprocess_dataset(filepath):
     assert len(df[0]) == len(sent_ids_column), 'Length of dataframe and sent_id column isn\'t the same.'
 
     # append new column 'sent_id_column' to df
-    sent_id_column = candidate_column_index+1
+    sent_id_column = candidate_column_index  # +1 for other candidate version
     df[sent_id_column] = sent_ids_column
 
     # retrieve the first 11 columns always, retrieve the target column (starting from 12 up to length of longest line)
@@ -93,18 +93,22 @@ def preprocess_dataset(filepath):
         is_not_0 = df[target_row] != 0
         filtered_df = df[is_not_0]
         new_df = filtered_df.iloc[:, [n for n in range(11)] +
-                                     [target_row, candidate_column_index, sent_id_column]
+                                     [target_row, sent_id_column]
                                   ].copy()
+        # used to be: (for other candidate version)
+        # new_df = filtered_df.iloc[:, [n for n in range(11)] +
+        #                              [target_row, candidate_column_index, sent_id_column]
+        #          ].copy()
 
-        ### gets candidates only for current proposition, alternative to "retrieve candidates" block above, previous
-        ## version
-        # candidates = [1 if c != 'V' and c != '_' else 0 for c in new_df[target_row]]
-        # new_df['is_candidate'] = candidates
-        ###
+        ## gets candidates only for current proposition, alternative to "retrieve candidates" block above, previous
+        # version
+        candidates = [1 if c != 'V' and c != '_' else 0 for c in new_df[target_row]]
+        new_df['is_candidate'] = candidates
+        ##
 
         # append the filtered dataframe (containing the first 11 columns + the target column + the candidate column +
         # the sent_id column) to a csv file
-        new_df.to_csv(f'Data/{datatype}_data.tsv', sep='\t', mode='a', header=False)
+        new_df.to_csv(f'Data/{datatype}_data_only_current_candidates.tsv', sep='\t', mode='a', header=False)
         print(f'{datatype.title()} dataframe with target column {target_row+1} and candidate and sent_id column '
               f'written to file.')
 
@@ -117,15 +121,16 @@ def preprocess_dataset(filepath):
         :return: None
         """
         if datatype == 'train':
-            new_filepath = 'Data/train_data.tsv'
+            new_filepath = 'Data/train_data_only_current_candidates.tsv'
         elif datatype == 'test':
-            new_filepath = 'Data/test_data.tsv'
+            new_filepath = 'Data/test_data_only_current_candidates.tsv'
 
         df = pd.read_csv(new_filepath, sep='\t', header=None, quotechar='ą', engine='python',
                          names=['token_global_id', 'token_id_in_sent', 'token', 'lemma',
                                 'UPOS', 'POS', 'grammar', 'head_id', 'dependency_label',
                                 'head_dependency_relation', 'additional_info',
-                                'PB_predicate', 'semantic_role', 'is_candidate', 'sent_id'])
+                                'PB_predicate', 'semantic_role', 'sent_id', 'is_candidate'])  # change order sent_id and
+        # is_candidate if other candidate version
 
         # create containers, a dictionary mapping a sentence id to all predicates that appear within this sentence, a
         # predicate column holding the current predicate that will be appended to the df, a global sent id column that
@@ -175,7 +180,7 @@ def preprocess_dataset(filepath):
             df['global_sent_id'] = global_sent_id_column[:-135] + [40481 for _ in range(135)]
 
         # overwrite old files with new information
-        df.to_csv(f'Data/{datatype}_data.tsv', sep='\t', mode='w', header=False)
+        df.to_csv(f'Data/{datatype}_data_only_current_candidates.tsv', sep='\t', mode='w', header=False)
 
     add_column_for_unique_sent_id_and_current_predicate(datatype)
 
