@@ -3,7 +3,10 @@
 # Advanced NLP Assignment 2
 
 import pandas as pd
+import spacy
+from spacy.tokens import Doc
 
+nlp = spacy.load('en_core_web_sm')
 
 def extract_features_to_determine_roles(filepath):
     """
@@ -85,9 +88,15 @@ def extract_features_to_determine_roles(filepath):
                         categorical_feature_dict['lemma_of_head'] = head_id.lower()
                         categorical_feature_dict['UPOS_of_head'] = head_id
                         categorical_feature_dict['POS_of_head'] = head_id
+                        
+                    # 3) extract whether the token is a NE (check whether UPOS is PROPN)
+                    if row['UPOS'] == 'PROPN':
+                        numerical_feature_dict['is_NE'] = 1
+                    else:
+                        numerical_feature_dict['is_NE'] = 0
 
-                    # 3) obtain voice of the predicate and fill the feature dict 'voice' with the values specified below
-                    # 4) obtain predicate order and fill the feature dict 'predicate_order' with the values specified
+                    # 4) obtain voice of the predicate and fill the feature dict 'voice' with the values specified below
+                    # 5) obtain predicate order and fill the feature dict 'predicate_order' with the values specified
                     # below (argument order still needs to be done)
                     if row['PB_predicate'] != '_':
                         count = count + 1
@@ -106,7 +115,7 @@ def extract_features_to_determine_roles(filepath):
                     categorical_feature_dicts.append(categorical_feature_dict)
                     numerical_feature_dicts.append(numerical_feature_dict)
 
-                # 5) get the distance from the token to the closest predicate
+                # 6) get the distance from the token to the closest predicate
                 # create a list of indexes that have a predicate
                 predicate_indices = [i for i, predicate in enumerate(predicates) if predicate != '_']
 
@@ -129,7 +138,24 @@ def extract_features_to_determine_roles(filepath):
 
                     # append the feature dict to the list
                     sentence_level_feature_dicts.append(distance_feature_dict)
-      
+                
+                # 7) get the NE type of the token
+                # process the pretokenized text with spacy 
+                doc = Doc(nlp.vocab, sentence)
+                
+                for token in nlp(doc):
+        
+                    ner_feature_dict = {}
+                    # if the token is a NE, get its NE tag
+                    if token.ent_type_:
+                        ner_feature_dict['NE_type'] = token.ent_type_
+                    # if the token is not a NE, return 'O'
+                    else:
+                        ner_feature_dict['NE_type'] = 'O'
+                        
+                    # append the feature dict to the list
+                    sentence_level_feature_dicts.append(ner_feature_dict)
+                    
     # return a zip with the three lists filled with feature dicts
     return df, categorical_feature_dicts, sentence_level_feature_dicts, numerical_feature_dicts
 
