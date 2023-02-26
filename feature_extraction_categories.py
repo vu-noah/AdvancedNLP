@@ -19,7 +19,6 @@ def extract_features_to_determine_roles(filepath):
     # that is not part of the tsv file, we make sure that nothing is counted as a quotechar (to solve the errors with
     # punctuation chars in italics)
 
-    # print(df)
     
     # create three empty lists to put the feature dicts in later
     categorical_feature_dicts = []
@@ -129,13 +128,21 @@ def extract_features_to_determine_roles(filepath):
                         categorical_feature_dict['voice'] = '_'
                         categorical_feature_dict['predicate_order'] = '_'
                     
-                    # 6a) get the distance to the current predicate
+                    # 6) get the distance to the current predicate
                     cur_index = row['token_id_in_sent']
                     distance = cur_pred_id_in_sent-cur_index
                     numerical_feature_dict['distance_to_predicate'] = distance
                     
+                    # 7) binary feature to determine whether the token is before or after predicate
+                    if distance > 0:
+                        #token is before the predicate
+                        numerical_feature_dict['before_predicate'] = 1
+                    if distance < 0:
+                        #token is after the predicate
+                        numerical_feature_dict['before_predicate'] = 0
                     
-                    # 7) get the NE type of the token
+                    
+                    # 8) get the NE type of the token
                     for token in nlp(doc):
                     # if the token is a NE, get its NE tag
                         if token.ent_type_:
@@ -147,7 +154,7 @@ def extract_features_to_determine_roles(filepath):
                     categorical_feature_dict['NE_type'] = NE_type
 
         
-                    # 8. Get the dependency path from current token to current predicate
+                    # 9) Get the dependency path from current token to current predicate
                     dependency_path_to_pred = []
 
                     #find the id of the current token
