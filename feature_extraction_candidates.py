@@ -25,11 +25,11 @@ def extract_features_to_determine_candidates(filepath):
     for group in df.groupby("global_sent_id", sort=False):
         sent_df = group[1]
 
-        # get the id of the current predicate in the sentence (for checking whether the token is an immediate child)
-        pb_predicate_id = []
+        # get the ids of the predicates in the sentence (for checking whether the token is an immediate child)
+        pb_predicate_ids = []
         for i, row in sent_df.iterrows():
-            if row['PB_predicate'] == row['current_predicate']:
-                pb_predicate_id.append(row['token_id_in_sent'])
+            if row['PB_predicate'] != '_':
+                pb_predicate_ids.append(row['token_id_in_sent'])
 
         # for each token in the sentence:  
         for i, row in sent_df.iterrows():
@@ -40,11 +40,10 @@ def extract_features_to_determine_candidates(filepath):
 
             # 1) extract the lemma and POS of the current token
             categorical_feature_dict['lemma'] = row['lemma'].lower()
-
             categorical_feature_dict['UPOS'] = row['UPOS']
             categorical_feature_dict['POS'] = row['POS']
         
-            # 2) extract the lemma of the head of the current token
+            # 2) extract the lemma and POS of the head of the current token
             head_id = row['head_id']
             if str(head_id).isdigit():
                 try:
@@ -57,6 +56,17 @@ def extract_features_to_determine_candidates(filepath):
                     categorical_feature_dict['lemma_of_head'] = 'token_is_root'
             else:
                 categorical_feature_dict['lemma_of_head'] = head_id.lower()
+
+            # def go_all_up(row, sentence_dataframe):
+            #     """
+            #
+            #     :param row:
+            #     :param sentence_dataframe:
+            #     :return:
+            #     """
+            #     head_id = int(row['head_id'])
+            #     if head_id != 0:
+            #         for j, row in sentence_dataframe:
             
             # extract whether the token is a NE (check whether UPOS is PROPN)
             if row['UPOS'] == 'PROPN':
@@ -64,8 +74,12 @@ def extract_features_to_determine_candidates(filepath):
             else:
                 numerical_feature_dict['is_NE'] = 0
 
-            # check if the current token is an immediate child of one of the predicates
-            if row['head_id'] in pb_predicate_id:
+            # check if the current token is an immediate child of the current predicate by accessing the iteration
+            # number; if there are three predicates in the sentence and we look at iteration number three, then the
+            # third predicate's id should be pb_predicate_ids[2]
+            current_predicate_id = pb_predicate_ids[row['iternum']]
+
+            if row['head_id'] == current_predicate_id:
                 numerical_feature_dict['immediate_child_of_pb_predicate'] = 1
             else:
                 numerical_feature_dict['immediate_child_of_pb_predicate'] = 0
