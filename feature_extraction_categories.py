@@ -65,7 +65,10 @@ def extract_features_to_determine_roles(filepath):
                 else:
                     if counter == predicate_iternum:
                         cur_pred_id_in_sent = row['token_id_in_sent']
-                            #if the predicate is also the head, we set cur_pred_is_head to True
+                        #if the predicate is passive, we set cur_pred_is_passive to True
+                        if "Voice=Pass" in row['grammar']:
+                            cur_pred_is_passive = True
+                        #if the predicate is also the head, we set cur_pred_is_head to True
                         if row['head_id'] == 0:
                             cur_pred_is_head = True
                             break
@@ -112,19 +115,30 @@ def extract_features_to_determine_roles(filepath):
                     else:
                         numerical_feature_dict['is_NE'] = 0
 
+#                     # 4) obtain voice of the predicate and fill the feature dict 'voice' with the values specified below
+#                     # 5) obtain predicate order and fill the feature dict 'predicate_order' with the values specified
+#                     # below (argument order still needs to be done)
+#                     if row['PB_predicate'] != '_':
+#                         count = count + 1
+#                         if row['grammar'] == 'Tense=Past|VerbForm=Part|Voice=Pass':
+#                             categorical_feature_dict['voice'] = 'passive'
+#                             categorical_feature_dict['predicate_order'] = f'{count}_passive'
+
+#                         if row['grammar'] != 'Tense=Past|VerbForm=Part|Voice=Pass':
+#                             categorical_feature_dict['voice'] = 'active'
+#                             categorical_feature_dict['predicate_order'] = f'{count}_active'
+#                     else:
+#                         categorical_feature_dict['voice'] = '_'
+#                         categorical_feature_dict['predicate_order'] = '_'
+                        
                     # 4) obtain voice of the predicate and fill the feature dict 'voice' with the values specified below
                     # 5) obtain predicate order and fill the feature dict 'predicate_order' with the values specified
                     # below (argument order still needs to be done)
-                    if row['PB_predicate'] != '_':
-                        count = count + 1
-                        if row['grammar'] == 'Tense=Past|VerbForm=Part|Voice=Pass':
-                            categorical_feature_dict['voice'] = 'passive'
-                            categorical_feature_dict['predicate_order'] = f'{count}_passive'
-
-                        if row['grammar'] != 'Tense=Past|VerbForm=Part|Voice=Pass':
-                            categorical_feature_dict['voice'] = 'active'
-                            categorical_feature_dict['predicate_order'] = f'{count}_active'
-                    else:
+                    if cur_pred_is_passive:
+                        count += 1
+                        categorical_feature_dict['voice'] = 'passive'
+                        categorical_feature_dict['predicate_order'] = f'{count}_passive'
+                    else: 
                         categorical_feature_dict['voice'] = '_'
                         categorical_feature_dict['predicate_order'] = '_'
                     
