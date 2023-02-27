@@ -39,23 +39,19 @@ def extract_features_to_determine_roles(filepath):
 
         # A. CREATING SENTENCE LEVEL OBJECTS TO HELP WITH FEATURE EXTRACTION
 
-        # 1. feed the sentence to a spacy pipeline for feature 7)
+        # 1. feed the sentence to a spacy pipeline, for feature 8)
         sentence = list(sent_df['token'])
         doc = Doc(nlp.vocab, sentence)
                 
-        # 2. create a counter for the argument candidates (for feature 5)
+        # 2. create a counter for the argument candidates, for feature 5)
         argument_count = 0
-        
 
-#         # was used for feature 6b (distance to closest predicate). Not sure if still needed
-#         predicates = list(sent_df['PB_predicate'])
-
-        # 3. create a dictionary that maps token IDs to head IDs, for feature XXX)
+        # 3. create a dictionary that maps token IDs to head IDs, for feature 9)
         index_head_dict = {token_id: head_id for token_id, head_id in zip(list(sent_df['token_id_in_sent']),
                                                                           list(sent_df['head_id']))}
         
         #4. find information about the current predicate (each sentence is copied as many times as there are predicates in the sentence;
-        #each copy is linked to a specific (current) predicate for which we want to label the arguments.
+        #each copy is linked to a specific (current) predicate for which we want to label the arguments.)
         
         #we want to know whether the current predicate is the head of the sentence, and whether or not it is passive. 
         #we initially assume these to be False
@@ -95,6 +91,8 @@ def extract_features_to_determine_roles(filepath):
 
             # create 2 dicts to store the categorical and numerical features in later
             categorical_feature_dict = {}
+            # we only extract features for tokens that are candidates; this would leave us with empty dicts for non-candidates.
+            # to ensure that all dicts have the same length after concatenation, we set the values to -999: a 'dummy' value that otherwise wont occur in the numerical dicts.
             numerical_feature_dict = {'is_NE': -999, 'distance_to_predicate': -999, 'before_predicate': -999}
 
             if row[candidate_column] == 1:
@@ -222,7 +220,12 @@ def extract_features_to_determine_roles(filepath):
             #     categorical_feature_dict['voice'] = '_'
             #     categorical_feature_dict['predicate_order'] = '_'
 
+            
+            
             # # 6b) get the distance from the token to the closest predicate
+            
+            # predicates = list(sent_df['PB_predicate'])
+            
             # # create a list of indexes that have a predicate
             # predicate_indices = [i for i, predicate in enumerate(predicates) if predicate != '_']
             #
