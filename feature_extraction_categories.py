@@ -85,7 +85,7 @@ def extract_features_to_determine_roles(filepath):
 
             # create 2 dicts to store the categorical and numerical features in later
             categorical_feature_dict = {}
-            numerical_feature_dict = {}
+            numerical_feature_dict = {'is_NE': -999, 'distance_to_predicate': -999, 'before_predicate': -999}
 
             if row[candidate_column] == 1:
 
@@ -173,9 +173,6 @@ def extract_features_to_determine_roles(filepath):
                     index = index_head_dict[index]
 
                 categorical_feature_dict['dependency_path_to_pred'] = dependency_path_to_pred
-
-            else:
-                numerical_feature_dict = {'is_NE': -999, 'distance_to_predicate': -999, 'before_predicate': -999}
 
             # print(categorical_feature_dict, numerical_feature_dict)
 
