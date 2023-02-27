@@ -36,8 +36,8 @@ def extract_features_to_determine_candidates(filepath):
             if row['PB_predicate'] != '_':
                 pb_predicate_dependency_labels.append(row['dependency_label'])
 
-        # index_head_dict = {token_id: head_id for token_id, head_id in
-        #                    zip(list(sent_df['token_id_in_sent']), list(sent_df['head_id']))}
+        index_head_dict = {token_id: head_id for token_id, head_id in
+                           zip(list(sent_df['token_id_in_sent']), list(sent_df['head_id']))}
 
         # for each token in the sentence:  
         for i, row in sent_df.iterrows():
@@ -51,14 +51,16 @@ def extract_features_to_determine_candidates(filepath):
             categorical_feature_dict['UPOS'] = row['UPOS']
             categorical_feature_dict['POS'] = row['POS']
             categorical_feature_dict['dependency_label'] = row['dependency_label']
+
+            ### do here dependency_label + is_child_of_current_predicate
         
-            # 2) extract the lemma and POS of the head of the current token
+            # 2) extract the lemma of the head of the current token
             head_id = row['head_id']
             if str(head_id).isdigit():
                 try:
                     # find row(s) in the dataframe whose token id equals the current token's head id
                     head_lemmas = sent_df.loc[sent_df['token_id_in_sent'] == int(head_id)]
-                    categorical_feature_dict['lemma_of_head'] = head_lemmas.iloc[0]['lemma'].lower()
+                    categorical_feature_dict['lemma_of_head'] = head_lemmas.iloc[0]['lemma']
                 # if the current token is the root, the above gives an IndexError; in that case we add 'None' to the
                 # feature dict
                 except IndexError:
@@ -87,28 +89,28 @@ def extract_features_to_determine_candidates(filepath):
             current_predicate_dependency_label = pb_predicate_dependency_labels[row['iternum']]
             categorical_feature_dict['dependency_label_of_current_predicate'] = current_predicate_dependency_label
 
-            # # check if current tokens dependency path leads up to current predicate
-            # token_is_nested_child = False
-            # # find the id of the current token
-            # current_token_id_in_sent = row['token_id_in_sent']
-            # # as long as the head_id of the current token is not the id of the current predicate,
-            # # we find the head of the current token
-            # while current_token_id_in_sent != current_predicate_id_in_sent:
-            #     # if we reach the root (index == 0), we stop the iteration (break), means that there is no path from the
-            #     # current token to the predicate, unless the predicate itself is the root
-            #     if current_token_id_in_sent == 0:
-            #         if current_predicate_id_in_sent == 0:
-            #             token_is_nested_child = True
-            #         break
-            #     # if we did not reach the predicate, we find the next head of the token and continue the while loop
-            #     current_token_id_in_sent = index_head_dict[current_token_id_in_sent]
-            # else:  # in case we do reach the predicate, we set the value to True
-            #     token_is_nested_child = True
-            #
-            # if token_is_nested_child:
-            #     numerical_feature_dict['nested_child_of_pb_predicate'] = 1
-            # else:
-            #     numerical_feature_dict['nested_child_of_pb_predicate'] = 0
+            # check if current tokens dependency path leads up to current predicate
+            token_is_nested_child = False
+            # find the id of the current token
+            current_token_id_in_sent = row['token_id_in_sent']
+            # as long as the head_id of the current token is not the id of the current predicate,
+            # we find the head of the current token
+            while current_token_id_in_sent != current_predicate_id_in_sent:
+                # if we reach the root (index == 0), we stop the iteration (break), means that there is no path from the
+                # current token to the predicate, unless the predicate itself is the root
+                if current_token_id_in_sent == 0:
+                    if current_predicate_id_in_sent == 0:
+                        token_is_nested_child = True
+                    break
+                # if we did not reach the predicate, we find the next head of the token and continue the while loop
+                current_token_id_in_sent = index_head_dict[current_token_id_in_sent]
+            else:  # in case we do reach the predicate, we set the value to True
+                token_is_nested_child = True
+
+            if token_is_nested_child:
+                numerical_feature_dict['nested_child_of_pb_predicate'] = 1
+            else:
+                numerical_feature_dict['nested_child_of_pb_predicate'] = 0
 
             # print(categorical_feature_dict, numerical_feature_dict)
 

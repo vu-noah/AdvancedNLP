@@ -73,11 +73,24 @@ def run_logreg(X_train_cat_dicts, X_train_num_dicts, y_train, X_test_cat_dicts, 
         print('Predicted candidates for test data stored.')
     elif step == 'roles':  # or get the probability distributions for the semantic role labels
         y_pred = model.predict(X_test_vectorized)
-        print('Semantic role redictions made.')
-        # df_test['predicted_semantic_role'] = y_pred
-        # print(y_pred)
-        # df_test.to_csv(f'Data/test_data_with_role_predictions.tsv', sep='\t', mode='w', header=True,
-        #               index=False)
+        print('Semantic role predictions made.')
+
+        # map predictions back to all tokens, not just candidates
+        prediction_list = [p for p in y_pred]
+        predictions_mapped = []
+        for i, row in df_test.iterrows():
+            if row['candidate_prediction'] == 0:
+                predictions_mapped.append('_')
+            else:
+                predictions_mapped.append(prediction_list[0])
+                prediction_list.pop(0)
+
+        # assign mapped predicitons to dataframe
+        df_test['predicted_semantic_role'] = predictions_mapped
+
+        # write file with SR predictions
+        df_test.to_csv(f'Data/test_data_with_role_predictions.tsv', sep='\t', mode='w', header=True,
+                       index=False)
     else:
         raise ValueError
     
