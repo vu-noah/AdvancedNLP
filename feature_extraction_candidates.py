@@ -134,4 +134,4 @@ if __name__ == '__main__':
 
     run_logreg(candidate_cat_feature_dicts_train, candidate_num_feature_dicts_train, df_train['is_candidate'].tolist(),
                candidate_cat_feature_dicts_test, candidate_num_feature_dicts_test, df_test['is_candidate'].tolist(),
-               df_test)
+               df_test, 'candidates')

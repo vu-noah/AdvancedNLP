@@ -5,6 +5,7 @@
 import pandas as pd
 import spacy
 from spacy.tokens import Doc
+from logistic_regression_model import run_logreg
 
 nlp = spacy.load('en_core_web_lg')
 
@@ -136,16 +137,16 @@ def extract_features_to_determine_roles(filepath):
                     # 5) obtain predicate order and fill the feature dict 'predicate_order' with the values specified
                     # below (argument order still needs to be done)
                     if cur_pred_is_passive:
-                        count += 1
+                        # count += 1
                         categorical_feature_dict['voice'] = 'passive'
-                        categorical_feature_dict['predicate_order'] = f'{count}_passive'
+                        # categorical_feature_dict['predicate_order'] = f'{count}_passive'
                     else: 
-                        categorical_feature_dict['voice'] = '_'
-                        categorical_feature_dict['predicate_order'] = '_'
+                        categorical_feature_dict['voice'] = 'active'
+                        # categorical_feature_dict['predicate_order'] = '_'
                     
                     # 6) get the distance to the current predicate
                     cur_index = row['token_id_in_sent']
-                    distance = cur_pred_id_in_sent-cur_index
+                    distance = cur_pred_id_in_sent - cur_index
                     numerical_feature_dict['distance_to_predicate'] = distance
                     
                     # 7) binary feature to determine whether the token is before or after predicate
@@ -191,6 +192,11 @@ def extract_features_to_determine_roles(filepath):
 
                     categorical_feature_dict['dependency_path_to_pred'] = dependency_path_to_pred
 
+                else:
+                    numerical_feature_dict = {'is_NE': -999, 'distance_to_predicate': -999, 'before_predicate': -999}
+
+                # print(categorical_feature_dict, numerical_feature_dict)
+
                 # append the feature dicts to the list
                 categorical_feature_dicts.append(categorical_feature_dict)
                 numerical_feature_dicts.append(numerical_feature_dict)
@@ -222,17 +228,17 @@ def extract_features_to_determine_roles(filepath):
                 
 
                     
-    # return a zip with the three lists filled with feature dicts
+    # return the feature dicts and the dataframe
     return df, categorical_feature_dicts, numerical_feature_dicts
 
 
 # extract the features to determine the SR of the candidates
 if __name__ == '__main__':
-    # roles_feature_dicts_train = \
-    # extract_features_to_determine_roles('Data/train_data_only_current_candidates.tsv')
-    roles_feature_dicts_test = \
+    df_train, role_cat_feature_dicts_train, role_num_feature_dicts_train = \
+        extract_features_to_determine_roles('Data/train_data_only_current_candidates.tsv')
+    df_test, role_cat_feature_dicts_test, role_num_feature_dicts_test = \
         extract_features_to_determine_roles('Data/test_data_with_candidate_predictions.tsv')
 
-    # test the code
-    for tup in roles_feature_dicts_test:
-        print(tup)
+    run_logreg(role_cat_feature_dicts_train, role_num_feature_dicts_train, df_train['semantic_role'].tolist(),
+               role_cat_feature_dicts_test, role_num_feature_dicts_test, df_test['semantic_role'].tolist(),
+               df_test, 'roles')

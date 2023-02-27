@@ -16,7 +16,8 @@ def concatenate_categorical_and_numerical_feature_vectors(categorical_vectors_ma
     return full_feature_vecs
 
 
-def run_logreg(X_train_cat_dicts, X_train_num_dicts, y_train, X_test_cat_dicts, X_test_num_dicts, y_test, df_test):
+def run_logreg(X_train_cat_dicts, X_train_num_dicts, y_train, X_test_cat_dicts, X_test_num_dicts, y_test, df_test,
+               step):
     """
     Run Logistic Regression model.   
     
@@ -27,6 +28,7 @@ def run_logreg(X_train_cat_dicts, X_train_num_dicts, y_train, X_test_cat_dicts, 
     :param list[dict] X_test_num_dicts: a list (of dicts) containing numerical features from test data
     :param list y_test: a list of gold labels from test data
     :param pandas.Dataframe df_test: the test dataframe which will be used to store the candidate predictions
+    :param str step: 'candidates' for candidate detection, 'roles' for role labelling
     """
     # vectorize categorical features
     dv = DictVectorizer()
@@ -57,15 +59,23 @@ def run_logreg(X_train_cat_dicts, X_train_num_dicts, y_train, X_test_cat_dicts, 
     model.fit(X_train_vectorized, y_train)
     print('LogReg model trained.')
 
-    # use the fitted model to make predictions for the concatenated features of the test data
-    y_pred = model.predict(X_test_vectorized)
-    print('Predictions made.')
-
     # write predictions to file, so we can extract features from the predicted candidates for the next step
-    df_test['candidate_prediction'] = y_pred
-    df_test.to_csv(f'Data/test_data_with_candidate_predictions.tsv', sep='\t', mode='w', header=True,
-                   index=False)
-    print('Predicted candidates for test data stored.')
+    if step == 'candidates':
+        y_pred = model.predict(X_test_vectorized)
+        print('Candidate predictions made.')
+        df_test['candidate_prediction'] = y_pred
+        df_test.to_csv(f'Data/test_data_with_candidate_predictions.tsv', sep='\t', mode='w', header=True,
+                       index=False)
+        print('Predicted candidates for test data stored.')
+    elif step == 'roles':  # or get the probability distributions for the semantic role labels
+        y_pred = model.predict_proba(X_test_vectorized)
+        print('Semantic role redictions made.')
+        df_test['predicted_semantic_role'] = y_pred
+        print(y_pred)
+        df_test.to_csv(f'Data/test_data_with_role_predictions.tsv', sep='\t', mode='w', header=True,
+                       index=False)
+    else:
+        raise ValueError
     
     # print classification report for the gold labels vs. the predicted labels of the test data
     print(classification_report(y_test, y_pred, digits=3))
