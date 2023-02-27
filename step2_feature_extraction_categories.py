@@ -50,28 +50,32 @@ def extract_features_to_determine_roles(filepath):
         index_head_dict = {token_id: head_id for token_id, head_id in zip(list(sent_df['token_id_in_sent']),
                                                                           list(sent_df['head_id']))}
         
-        #4. find information about the current predicate (each sentence is copied as many times as there are predicates in the sentence;
-        #each copy is linked to a specific (current) predicate for which we want to label the arguments.)
+        # 4. find information about the current predicate (each sentence is copied as many times as there are predicates
+        # in the sentence;
+        # each copy is linked to a specific (current) predicate for which we want to label the arguments.)
         
-        #we want to know whether the current predicate is the head of the sentence, and whether or not it is passive. 
-        #we initially assume these to be False
+        # we want to know whether the current predicate is the head of the sentence, and whether or not it is passive.
+        # we initially assume these to be False
         cur_pred_is_head = False
         cur_pred_is_passive = False
         
-        # the iternum column holds a count that represents which copy of the sentence (and thus, which predicate) we are on
+        # the iternum column holds a count that represents which copy of the sentence (and thus, which predicate) we are
+        # on
         predicate_iternum = list(sent_df['iternum'])[0]
      
-        #iterate over the predicate column. Our goal is to find the ith predicate for i == predicate_iternum
+        # iterate over the predicate column. Our goal is to find the ith predicate for i == predicate_iternum
         counter = 0
         for i, row in sent_df.iterrows():
-            #we are only interested in predicates, so we skip any non-predicates (value '_')
+            # we are only interested in predicates, so we skip any non-predicates (value '_')
             if row['PB_predicate'] == '_':
                 continue
             else:
-                #the counter value represents one of the predicates in the sentence
-                #if this counter equals the iternum, then we are on the row in which the information about the current predicate is stored
+                # the counter value represents one of the predicates in the sentence
+                # if this counter equals the iternum, then we are on the row in which the information about the current
+                # predicate is stored
                 if counter == predicate_iternum:
-                    #we set a variable 'cur_pred_id_in_sent' to represent the predicates id in the sentence, and 'UPOS_of_cur_pred' to represent the predicate's UPOS
+                    # we set a variable 'cur_pred_id_in_sent' to represent the predicates id in the sentence, and
+                    # 'UPOS_of_cur_pred' to represent the predicate's UPOS
                     cur_pred_id_in_sent = row['token_id_in_sent']
                     UPOS_of_cur_pred = row['UPOS']
                     # if the predicate is passive, we set cur_pred_is_passive to True
@@ -88,20 +92,19 @@ def extract_features_to_determine_roles(filepath):
 
         # for each token in the sentence:
         for i, row in sent_df.iterrows():
-
-            # create 2 dicts to store the categorical and numerical features in later
-            categorical_feature_dict = {}
-            # we only extract features for tokens that are candidates; this would leave us with empty dicts for non-candidates.
-            # to ensure that all dicts have the same length after concatenation, we set the values to -999: a 'dummy' value that otherwise wont occur in the numerical dicts.
-            numerical_feature_dict = {'is_NE': -999, 'distance_to_predicate': -999, 'before_predicate': -999}
-
             if row[candidate_column] == 1:
 
-                # 1) extract lemma and PoS of the current token
+                # create 2 dicts to store the categorical and numerical features in later
+                # we only extract features for tokens that are candidates
+                categorical_feature_dict = {}
+                numerical_feature_dict = {}
+
+                # 1) extract lemma, PoS, and dependeny label of the current token
                 categorical_feature_dict['lemma'] = row['lemma'].lower()
 
                 categorical_feature_dict['UPOS'] = row['UPOS']
                 categorical_feature_dict['POS'] = row['POS']
+                categorical_feature_dict['dependency_label'] = row['dependency_label']
 
                 # 2) extract lemma and POS of the head
                 head_id = row['head_id']
@@ -135,30 +138,30 @@ def extract_features_to_determine_roles(filepath):
                     # categorical_feature_dict['predicate_order'] = '_'
                     
                 #5) get argument order in combination with whether the predicate is a passive verb, active verb or other
-                #each argument candidate in the sentence gets an updated value for argument_count
+                # each argument candidate in the sentence gets an updated value for argument_count
                 argument_count += 1
-                #check if the current predicate is a verb
+                # check if the current predicate is a verb
                 if UPOS_of_cur_pred in ['AUX', 'VERB']:
-                    #check whether it is passive or active
+                    #c heck whether it is passive or active
                     if cur_pred_is_passive:
                         categorical_feature_dict['argument_order_voice'] = f"{argument_count}_passive"
                     else:
                         categorical_feature_dict['argument_order_voice'] = f"{argument_count}_active"
-                #if the predicate is not a verb, assign it the category 'other'
+                # if the predicate is not a verb, assign it the category 'other'
                 else:
                     categorical_feature_dict['argument_order_voice'] = f"{argument_count}_other"
 
 
                 # 6) get the distance to the current predicate
                 cur_index = row['token_id_in_sent']
-                distance = cur_pred_id_in_sent - cur_index
+                distance = cur_index - cur_pred_id_in_sent
                 numerical_feature_dict['distance_to_predicate'] = distance
 
                 # 7) binary feature to determine whether the token is before or after predicate
-                if distance > 0:
+                if distance < 0:
                     # token is before the predicate
                     numerical_feature_dict['before_predicate'] = 1
-                if distance < 0:
+                if distance >= 0:
                     # token is after the predicate
                     numerical_feature_dict['before_predicate'] = 0
 
@@ -197,11 +200,10 @@ def extract_features_to_determine_roles(filepath):
 
                 categorical_feature_dict['dependency_path_to_pred'] = dependency_path_to_pred
 
-            # print(categorical_feature_dict, numerical_feature_dict)
-
-            # append the feature dicts to the list
-            categorical_feature_dicts.append(categorical_feature_dict)
-            numerical_feature_dicts.append(numerical_feature_dict)
+                # print(categorical_feature_dict, numerical_feature_dict)
+                # append the feature dicts to the list
+                categorical_feature_dicts.append(categorical_feature_dict)
+                numerical_feature_dicts.append(numerical_feature_dict)
 
             # # 4) obtain voice of the predicate and fill the feature dict 'voice' with the values specified
             # # below
@@ -250,7 +252,7 @@ def extract_features_to_determine_roles(filepath):
             #     sentence_level_feature_dicts.append(distance_feature_dict)
 
     print('Features extracted.')
-    # print(categorical_feature_dicts, numerical_feature_dicts)
+    # print(len(categorical_feature_dicts), len(numerical_feature_dicts))
     # return the feature dicts and the dataframe
     return df, categorical_feature_dicts, numerical_feature_dicts
 
@@ -262,8 +264,10 @@ if __name__ == '__main__':
     df_test, role_cat_feature_dicts_test, role_num_feature_dicts_test = \
         extract_features_to_determine_roles('Data/test_data_with_candidate_predictions.tsv')
 
-    run_logreg(role_cat_feature_dicts_train, role_num_feature_dicts_train, [role if role != 'V' else '_' for role in
-                                                                            df_train['semantic_role']],
-               role_cat_feature_dicts_test, role_num_feature_dicts_test, [role if role != 'V' else '_' for role in
-                                                                          df_test['semantic_role']],
+    run_logreg(role_cat_feature_dicts_train, role_num_feature_dicts_train, [role for role in
+                                                                            df_train['semantic_role'] if
+                                                                            role != 'V' and role != '_'],
+               role_cat_feature_dicts_test, role_num_feature_dicts_test, [role for i, role in
+                                                                          enumerate(df_test['semantic_role']) if
+                                                                          df_test['candidate_prediction'][i] == 1],
                df_test, 'roles')  # making sure 'V' is not one of the categories we want to predict

@@ -30,6 +30,10 @@ def run_logreg(X_train_cat_dicts, X_train_num_dicts, y_train, X_test_cat_dicts, 
     :param pandas.Dataframe df_test: the test dataframe which will be used to store the candidate predictions
     :param str step: 'candidates' for candidate detection, 'roles' for role labelling
     """
+    # check if everything is correct
+    print(len(X_train_cat_dicts), len(X_train_num_dicts), len(y_train))
+    print(len(X_test_cat_dicts), len(X_test_num_dicts), len(y_test))
+
     # vectorize categorical features
     dv = DictVectorizer()
     X_train_cat_vectorized = dv.fit_transform(X_train_cat_dicts)
@@ -70,10 +74,10 @@ def run_logreg(X_train_cat_dicts, X_train_num_dicts, y_train, X_test_cat_dicts, 
     elif step == 'roles':  # or get the probability distributions for the semantic role labels
         y_pred = model.predict(X_test_vectorized)
         print('Semantic role redictions made.')
-        df_test['predicted_semantic_role'] = y_pred
-        print(y_pred)
-        df_test.to_csv(f'Data/test_data_with_role_predictions.tsv', sep='\t', mode='w', header=True,
-                       index=False)
+        # df_test['predicted_semantic_role'] = y_pred
+        # print(y_pred)
+        # df_test.to_csv(f'Data/test_data_with_role_predictions.tsv', sep='\t', mode='w', header=True,
+        #               index=False)
     else:
         raise ValueError
     
