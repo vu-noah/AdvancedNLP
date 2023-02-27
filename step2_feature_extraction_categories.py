@@ -39,35 +39,45 @@ def extract_features_to_determine_roles(filepath):
 
         # A. CREATING SENTENCE LEVEL OBJECTS TO HELP WITH FEATURE EXTRACTION
 
-        # create a list of tokens and predicates, for feature 6) and 7)
+        # 1. feed the sentence to a spacy pipeline for feature 7)
         sentence = list(sent_df['token'])
         doc = Doc(nlp.vocab, sentence)
+                
+        # 2. create a counter for the argument candidates (for feature 5)
+        argument_count = 0
+        
 
-        # was used for feature 6b (distance to closest predicate). Not sure if still needed
-        predicates = list(sent_df['PB_predicate'])
+#         # was used for feature 6b (distance to closest predicate). Not sure if still needed
+#         predicates = list(sent_df['PB_predicate'])
 
-        count = 0  # needed to extract the argument_order feature
-
-        # create a dictionary that maps token IDs to head IDs, for feature XXX)
+        # 3. create a dictionary that maps token IDs to head IDs, for feature XXX)
         index_head_dict = {token_id: head_id for token_id, head_id in zip(list(sent_df['token_id_in_sent']),
                                                                           list(sent_df['head_id']))}
-
-        # find the index of the current predicate for feature XXX)
-        # we assume the current predicate is not the head (also used for feature XXX)
+        
+        #4. find information about the current predicate (each sentence is copied as many times as there are predicates in the sentence;
+        #each copy is linked to a specific (current) predicate for which we want to label the arguments.
+        
+        #we want to know whether the current predicate is the head of the sentence, and whether or not it is passive. 
+        #we initially assume these to be False
         cur_pred_is_head = False
         cur_pred_is_passive = False
-        # the iternum column holds a count that represents which copy of the sentence (and thus, which predicate) we
-        # are on
+        
+        # the iternum column holds a count that represents which copy of the sentence (and thus, which predicate) we are on
         predicate_iternum = list(sent_df['iternum'])[0]
+     
+        #iterate over the predicate column. Our goal is to find the ith predicate for i == predicate_iternum
         counter = 0
-        # we iterate over the predicate column: we want to find the ith predicate for i == predicate_iternum
         for i, row in sent_df.iterrows():
-            # we are only interested in predicates, so we skip any non-predicates (value '_')
+            #we are only interested in predicates, so we skip any non-predicates (value '_')
             if row['PB_predicate'] == '_':
                 continue
             else:
+                #the counter value represents one of the predicates in the sentence
+                #if this counter equals the iternum, then we are on the row in which the information about the current predicate is stored
                 if counter == predicate_iternum:
+                    #we set a variable 'cur_pred_id_in_sent' to represent the predicates id in the sentence, and 'UPOS_of_cur_pred' to represent the predicate's UPOS
                     cur_pred_id_in_sent = row['token_id_in_sent']
+                    UPOS_of_cur_pred = row['UPOS']
                     # if the predicate is passive, we set cur_pred_is_passive to True
                     if "Voice=Pass" in row['grammar']:
                         cur_pred_is_passive = True
@@ -75,8 +85,8 @@ def extract_features_to_determine_roles(filepath):
                     if row['head_id'] == 0:
                         cur_pred_is_head = True
                         break
-                    else:
-                        counter += 1
+                else:
+                    counter += 1
 
         # B. ITERATE OVER TOKENS TO ADD THE FEATURES TO THE FEATURE DICT
 
@@ -125,6 +135,21 @@ def extract_features_to_determine_roles(filepath):
                 else:
                     categorical_feature_dict['voice'] = 'active'
                     # categorical_feature_dict['predicate_order'] = '_'
+                    
+                #5) get argument order in combination with whether the predicate is a passive verb, active verb or other
+                #each argument candidate in the sentence gets an updated value for argument_count
+                argument_count += 1
+                #check if the current predicate is a verb
+                if UPOS_of_cur_pred in ['AUX', 'VERB']:
+                    #check whether it is passive or active
+                    if cur_pred_is_passive:
+                        categorical_feature_dict['argument_order_voice'] = f"{argument_count}_passive"
+                    else:
+                        categorical_feature_dict['argument_order_voice'] = f"{argument_count}_active"
+                #if the predicate is not a verb, assign it the category 'other'
+                else:
+                    categorical_feature_dict['argument_order_voice'] = f"{argument_count}_other"
+
 
                 # 6) get the distance to the current predicate
                 cur_index = row['token_id_in_sent']
