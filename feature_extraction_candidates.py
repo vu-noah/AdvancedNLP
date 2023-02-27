@@ -117,7 +117,7 @@ def extract_features_to_determine_candidates(filepath):
             numerical_feature_dicts.append(numerical_feature_dict)
 
     print('Features extracted.')
-    # return a zip with the two lists filled with feature dicts
+    # return the df and two lists filled with feature dicts
     return df, categorical_feature_dicts, numerical_feature_dicts
 
 
