@@ -222,7 +222,7 @@ def extract_features_to_determine_roles(filepath):
             #     sentence_level_feature_dicts.append(distance_feature_dict)
 
     print('Features extracted.')
-    print(categorical_feature_dicts, numerical_feature_dicts)
+    # print(categorical_feature_dicts, numerical_feature_dicts)
     # return the feature dicts and the dataframe
     return df, categorical_feature_dicts, numerical_feature_dicts
 
