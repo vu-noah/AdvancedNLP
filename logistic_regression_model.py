@@ -68,7 +68,7 @@ def run_logreg(X_train_cat_dicts, X_train_num_dicts, y_train, X_test_cat_dicts, 
                        index=False)
         print('Predicted candidates for test data stored.')
     elif step == 'roles':  # or get the probability distributions for the semantic role labels
-        y_pred = model.predict_proba(X_test_vectorized)
+        y_pred = model.predict(X_test_vectorized)
         print('Semantic role redictions made.')
         df_test['predicted_semantic_role'] = y_pred
         print(y_pred)

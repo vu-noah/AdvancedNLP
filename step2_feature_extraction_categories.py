@@ -234,6 +234,8 @@ if __name__ == '__main__':
     df_test, role_cat_feature_dicts_test, role_num_feature_dicts_test = \
         extract_features_to_determine_roles('Data/test_data_with_candidate_predictions.tsv')
 
-    run_logreg(role_cat_feature_dicts_train, role_num_feature_dicts_train, df_train['semantic_role'].tolist(),
-               role_cat_feature_dicts_test, role_num_feature_dicts_test, df_test['semantic_role'].tolist(),
-               df_test, 'roles')
+    run_logreg(role_cat_feature_dicts_train, role_num_feature_dicts_train, [role if role != 'V' else '_' for role in
+                                                                            df_train['semantic_role']],
+               role_cat_feature_dicts_test, role_num_feature_dicts_test, [role if role != 'V' else '_' for role in
+                                                                          df_test['semantic_role']],
+               df_test, 'roles')  # making sure 'V' is not one of the categories we want to predict
