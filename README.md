@@ -14,6 +14,7 @@ The repository contains the following files:
 - step2_feature_extraction_categories.py: the code to extract features for a multinomial classifier that predicts the argument nature of predicted argument candidates of the current predicate, also trains, tests, and evaluates the classifier
 - main.py: the main script that executes all of the above
 - Data_zipped.zip: a zip file containing the preprocessed datasets and the files with predictions
+- distribution_epxeriments.py: a file containing code that would have been used to get the best distribution of classes for each sentence, unfinished
 
 Instructions:
 - run the main script
