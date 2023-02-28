@@ -1,7 +1,9 @@
+import pandas as pd
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
 from scipy.sparse import hstack
+from collections import defaultdict
 
 
 def concatenate_categorical_and_numerical_feature_vectors(categorical_vectors_matrix, numerical_vectors_list):
@@ -71,28 +73,60 @@ def run_logreg(X_train_cat_dicts, X_train_num_dicts, y_train, X_test_cat_dicts, 
         df_test.to_csv(f'Data/test_data_with_candidate_predictions.tsv', sep='\t', mode='w', header=True,
                        index=False)
         print('Predicted candidates for test data stored.')
+
+        print(classification_report(y_test, y_pred, digits=3))
+
     elif step == 'roles':  # or get the probability distributions for the semantic role labels
+        # get full class predictions
         y_pred = model.predict(X_test_vectorized)
         print('Semantic role predictions made.')
 
         # map predictions back to all tokens, not just candidates
-        prediction_list = [p for p in y_pred]
+        prediction_list = y_pred.tolist()
         predictions_mapped = []
         for i, row in df_test.iterrows():
             if row['candidate_prediction'] == 0:
                 predictions_mapped.append('_')
             else:
-                predictions_mapped.append(prediction_list[0])
-                prediction_list.pop(0)
+                predictions_mapped.append(prediction_list.pop(0))
 
         # assign mapped predicitons to dataframe
         df_test['predicted_semantic_role'] = predictions_mapped
 
+        # get probability distribution predictions
+        y_pred = model.predict_proba(X_test_vectorized)
+        print('Semantic role probability distribution for predictions retrieved.')
+
+        # map each of the predicted probabilities to their semantic role
+        prob_prediction_list = y_pred.tolist()
+        predictions_stored_per_class = defaultdict(list)
+
+        for i, SR in enumerate(model.classes_.tolist()):
+            for prediction in prob_prediction_list:
+                predictions_stored_per_class[SR].append(prediction[i])
+
+        # map them back to only the candidate tokens
+        predictions_mapped = defaultdict(list)
+
+        for predicted_class, predicted_probabilities in predictions_stored_per_class.items():
+            for i, row in df_test.iterrows():
+                if row['candidate_prediction'] == 0:
+                    predictions_mapped[predicted_class].append('_')
+                else:
+                    predictions_mapped[predicted_class].append(predicted_probabilities.pop(0))
+
+        predictions_df = pd.DataFrame(predictions_mapped)
+
+        frames = [df_test, predictions_df]
+
+        final_prediction_df = pd.concat(frames, axis=1)
+
         # write file with SR predictions
-        df_test.to_csv(f'Data/test_data_with_role_predictions.tsv', sep='\t', mode='w', header=True,
-                       index=False)
+        final_prediction_df.to_csv(f'Data/test_data_with_role_predictions.tsv', sep='\t', mode='w', header=True,
+                                   index=False)
+
+        print(classification_report(final_prediction_df['semantic_role'].tolist(),
+                                    final_prediction_df['predicted_semantic_role'].tolist(), digits=3))
+
     else:
         raise ValueError
-    
-    # print classification report for the gold labels vs. the predicted labels of the test data
-    print(classification_report(y_test, y_pred, digits=3))
