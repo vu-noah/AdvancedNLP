@@ -199,6 +199,9 @@ def extract_features_to_determine_roles(filepath):
                     index = index_head_dict[index]
 
                 categorical_feature_dict['dependency_path_to_pred'] = dependency_path_to_pred
+                
+                # 10) add UPOS of predicate
+                categorical_feature_dict['UPOS_of_cur_pred'] = UPOS_of_cur_pred
 
                 # print(categorical_feature_dict, numerical_feature_dict)
                 # append the feature dicts to the list
