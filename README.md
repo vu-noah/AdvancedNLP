@@ -4,7 +4,7 @@ Authors: Noah-Manuel Michael (2778420), Basje Maes (2788012), Irma Tuinenga (273
 
 This repository contains the following directories:
 - Assignment 1: directory containing code that was used for assignment 1
-- Data: directory holding the original .conllu files, the preprocessed files, as well as the files that contain the predictions made by our classifiers
+- Data: directory holding the original .conllu files, the preprocessed files, json files that contain features obtained from a constituency parser, as well as the files that contain the predictions made by our classifiers
 
 The repository contains the following files:
 - requirements.txt: a file listing all the requirements to run the code
