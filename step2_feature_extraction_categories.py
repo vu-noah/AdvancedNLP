@@ -10,6 +10,83 @@ from logistic_regression_model import run_logreg
 nlp = spacy.load('en_core_web_lg')
 
 
+def get_information_about_predicate(sent_df):
+    """Extracts information about the current predicate. Helper function for extract_features_to_determine_roles
+    param sent_df: a Pandas dataframe that represents one sentence
+    returns: 
+        cur_pred_is_head (bool): True if the current predicate is the head of the sentence
+        cur_pred_is_passive (bool): True if the current predicate is passive 
+        cur_pred_id_in_sent (int): the id in the sentence of current predicate
+        UPOS_of_cur_pred (string): the UPOS of the current predicate"""
+    # we want to know whether the current predicate is the head of the sentence, and whether or not it is passive.
+    # we initially assume these to be False
+    cur_pred_is_head = False
+    cur_pred_is_passive = False
+        
+    # the iternum column holds a count that represents which copy of the sentence (and thus, which predicate) we are on
+    predicate_iternum = list(sent_df['iternum'])[0]
+     
+    # iterate over the predicate column. Our goal is to find the ith predicate for i == predicate_iternum
+    counter = 0
+    for i, row in sent_df.iterrows():
+        # we are only interested in predicates, so we skip any non-predicates (value '_')
+        if row['PB_predicate'] == '_':
+            continue
+        else:
+            # the counter value represents one of the predicates in the sentence
+            # if this counter equals the iternum, then we are on the row in which the information about the current
+            # predicate is stored
+            if counter == predicate_iternum:
+                # we set a variable 'cur_pred_id_in_sent' to represent the predicates id in the sentence, and
+                # 'UPOS_of_cur_pred' to represent the predicate's UPOS
+                cur_pred_id_in_sent = row['token_id_in_sent']
+                UPOS_of_cur_pred = row['UPOS']
+                # if the predicate is passive, we set cur_pred_is_passive to True
+                if "Voice=Pass" in row['grammar']:
+                    cur_pred_is_passive = True
+                # if the predicate is also the head, we set cur_pred_is_head to True
+                if row['head_id'] == 0:
+                    cur_pred_is_head = True
+                    break
+            else:
+                counter += 1
+                
+    return cur_pred_is_head, cur_pred_is_passive, cur_pred_id_in_sent, UPOS_of_cur_pred
+
+
+def get_dependency_path(sent_df, row, cur_pred_is_head, cur_pred_id_in_sent):
+    """Extracts a dependency path from a token to its dependency head. Helper function for extract_features_to_determine_roles
+    param sent_df: a Pandas dataframe that represents one sentence
+    param row: the row in the sent_df from which we want to know the path
+    param bool cur_pred_is_head: a Bool indicating whether the current predicate is the head
+    param int cur_pred_id_in_sent: the index of the current predicate in the sentence
+    
+    returns: a list of dependency relations from the current token to the head. If there is no path to the , the list is empty."""
+    
+    #create a dictionary that maps token IDs to head IDs
+    index_head_dict = {token_id: head_id for token_id, head_id in zip(list(sent_df['token_id_in_sent']),
+                                                                          list(sent_df['head_id']))}
+    dependency_path_to_pred = []
+
+    # find the id of the current token
+    index = row['token_id_in_sent']
+    # as long as the head_id of the current token is not the id of the current predicate,
+    # we find the head of the current token and add its dependency label to the list 'dependency_path_to_pred'
+    while index != cur_pred_id_in_sent:
+        # find the current head
+        dependency_path_to_pred.append(list(sent_df['dependency_label'])[index-1])
+        # if we reach the root (index == 0), we stop the iteration (break)
+        if index == 0:
+            # if the current predicate isn't the root, that means we have not reached the current
+            # predicate, therefore there is no possible dependency path to the predicate. We create an empty path '[]'
+            if not cur_pred_is_head:
+                dependency_path_to_pred = []
+            brea
+        # if we did not reach the root, we find the next head of the token and continue the while loop
+        index = index_head_dict[index]
+        
+    return dependency_path_to_pred
+
 def extract_features_to_determine_roles(filepath):
     """
     Extract features for SR candidate tokens (predicted in the previous step).
@@ -46,47 +123,11 @@ def extract_features_to_determine_roles(filepath):
         # 2. create a counter for the argument candidates, for feature 5)
         argument_count = 0
 
-        # 3. create a dictionary that maps token IDs to head IDs, for feature 9)
-        index_head_dict = {token_id: head_id for token_id, head_id in zip(list(sent_df['token_id_in_sent']),
-                                                                          list(sent_df['head_id']))}
         
         # 4. find information about the current predicate (each sentence is copied as many times as there are predicates
-        # in the sentence;
-        # each copy is linked to a specific (current) predicate for which we want to label the arguments.)
-        
-        # we want to know whether the current predicate is the head of the sentence, and whether or not it is passive.
-        # we initially assume these to be False
-        cur_pred_is_head = False
-        cur_pred_is_passive = False
-        
-        # the iternum column holds a count that represents which copy of the sentence (and thus, which predicate) we are
-        # on
-        predicate_iternum = list(sent_df['iternum'])[0]
-     
-        # iterate over the predicate column. Our goal is to find the ith predicate for i == predicate_iternum
-        counter = 0
-        for i, row in sent_df.iterrows():
-            # we are only interested in predicates, so we skip any non-predicates (value '_')
-            if row['PB_predicate'] == '_':
-                continue
-            else:
-                # the counter value represents one of the predicates in the sentence
-                # if this counter equals the iternum, then we are on the row in which the information about the current
-                # predicate is stored
-                if counter == predicate_iternum:
-                    # we set a variable 'cur_pred_id_in_sent' to represent the predicates id in the sentence, and
-                    # 'UPOS_of_cur_pred' to represent the predicate's UPOS
-                    cur_pred_id_in_sent = row['token_id_in_sent']
-                    UPOS_of_cur_pred = row['UPOS']
-                    # if the predicate is passive, we set cur_pred_is_passive to True
-                    if "Voice=Pass" in row['grammar']:
-                        cur_pred_is_passive = True
-                    # if the predicate is also the head, we set cur_pred_is_head to True
-                    if row['head_id'] == 0:
-                        cur_pred_is_head = True
-                        break
-                else:
-                    counter += 1
+        # in the sentence; each copy is linked to a specific (current) predicate for which we want to label the arguments.)
+        # we extract whether the current pred is the head (bool), whether it is passive (bool), its id (int), and its UPOS (str)
+        cur_pred_is_head, cur_pred_is_passive, cur_pred_id_in_sent, UPOS_of_cur_pred = get_information_about_predicate(sent_df)
 
         # B. ITERATE OVER TOKENS TO ADD THE FEATURES TO THE FEATURE DICT
 
@@ -99,16 +140,16 @@ def extract_features_to_determine_roles(filepath):
                 categorical_feature_dict = {}
                 numerical_feature_dict = {}
 
+                
                 # 1) extract lemma, PoS, and dependeny label of the current token
                 categorical_feature_dict['lemma'] = row['lemma'].lower()
-
                 categorical_feature_dict['UPOS'] = row['UPOS']
                 categorical_feature_dict['POS'] = row['POS']
                 categorical_feature_dict['dependency_label'] = row['dependency_label']
 
+                
                 # 2) extract lemma and POS of the head
                 head_id = row['head_id']
-
                 try:
                     # find row(s) in the dataframe whose token id equals the current token's head id
                     head_lemmas = sent_df.loc[sent_df['token_id_in_sent'] == int(head_id)]
@@ -122,12 +163,14 @@ def extract_features_to_determine_roles(filepath):
                     categorical_feature_dict['UPOS_of_head'] = 'token_is_root'
                     categorical_feature_dict['POS_of_head'] = 'token_is_root'
 
+                    
                 # 3) extract whether the token is a NE (check whether UPOS is PROPN)
                 if row['UPOS'] == 'PROPN':
                     numerical_feature_dict['is_NE'] = 1
                 else:
                     numerical_feature_dict['is_NE'] = 0
 
+                    
                 # 4) obtain voice of the predicate and fill the feature dict 'voice' with the values specified below
                 if cur_pred_is_passive:
                     # count += 1
@@ -157,6 +200,7 @@ def extract_features_to_determine_roles(filepath):
                 distance = cur_index - cur_pred_id_in_sent
                 numerical_feature_dict['distance_to_predicate'] = distance
 
+                
                 # 7) binary feature to determine whether the token is before or after predicate
                 if distance < 0:
                     # token is before the predicate
@@ -165,6 +209,7 @@ def extract_features_to_determine_roles(filepath):
                     # token is after the predicate
                     numerical_feature_dict['before_predicate'] = 0
 
+                    
                 # 8) get the NE type of the token
                 for token in nlp(doc):
                     # if the token is a NE, get its NE tag
@@ -176,28 +221,9 @@ def extract_features_to_determine_roles(filepath):
 
                 categorical_feature_dict['NE_type'] = NE_type
 
+                
                 # 9) Get the dependency path from current token to current predicate
-                dependency_path_to_pred = []
-
-                # find the id of the current token
-                index = row['token_id_in_sent']
-                # as long as the head_id of the current token is not the id of the current predicate,
-                # we find the head of the current token and add its dependency label to the list
-                # 'dependency_path_to_pred'
-                while index != cur_pred_id_in_sent:
-                    # find the current
-                    dependency_path_to_pred.append(list(sent_df['dependency_label'])[index-1])
-                    # if we reach the root (index == 0), we stop the iteration (break)
-                    if index == 0:
-                        # if the current predicate isn't the root, that means we have not reached the current
-                        # predicate, therefore there is no possible dependency path to the predicate. We create an
-                        # empty path '[]'
-                        if not cur_pred_is_head:
-                            dependency_path_to_pred = []
-                        break
-                    # if we did not reach the root, we find the next head of the token and continue the while loop
-                    index = index_head_dict[index]
-
+                dependency_path_to_pred = get_dependency_path(sent_df, row, cur_pred_is_head, cur_pred_id_in_sent)
                 categorical_feature_dict['dependency_path_to_pred'] = dependency_path_to_pred
                 
                 # 10) add UPOS of predicate
@@ -208,55 +234,10 @@ def extract_features_to_determine_roles(filepath):
                 categorical_feature_dicts.append(categorical_feature_dict)
                 numerical_feature_dicts.append(numerical_feature_dict)
 
-            # # 4) obtain voice of the predicate and fill the feature dict 'voice' with the values specified
-            # # below
-            # # 5) obtain predicate order and fill the feature dict 'predicate_order' with the values specified
-            # # below (argument order still needs to be done)
-            # if row['PB_predicate'] != '_':
-            #     count = count + 1
-            #     if row['grammar'] == 'Tense=Past|VerbForm=Part|Voice=Pass':
-            #         categorical_feature_dict['voice'] = 'passive'
-            #         categorical_feature_dict['predicate_order'] = f'{count}_passive'
-            #
-            #     if row['grammar'] != 'Tense=Past|VerbForm=Part|Voice=Pass':
-            #         categorical_feature_dict['voice'] = 'active'
-            #         categorical_feature_dict['predicate_order'] = f'{count}_active'
-            # else:
-            #     categorical_feature_dict['voice'] = '_'
-            #     categorical_feature_dict['predicate_order'] = '_'
-
-            
-            
-            # # 6b) get the distance from the token to the closest predicate
-            
-            # predicates = list(sent_df['PB_predicate'])
-            
-            # # create a list of indexes that have a predicate
-            # predicate_indices = [i for i, predicate in enumerate(predicates) if predicate != '_']
-            #
-            # # for each index and token in the sentence list:
-            # for i, token in enumerate(sentence):
-            #
-            #     # create an empty dict to put the distance feature in later
-            #     distance_feature_dict = {}
-            #
-            #     # if the token is a predicate, fill the dict with value 0
-            #     if predicates[i] != '_':
-            #         distance_feature_dict['distance_to_predicate'] = 0
-            #
-            #     # otherwise, obtain the distance from the token to the closest predicate,
-            #     # by calculating the lowest distance between the index of the token on one hand and each of the
-            #     # indexes of the predicate_indices list on the other hand
-            #     else:
-            #         distance = min(abs(i - index) for index in predicate_indices)
-            #         distance_feature_dict['distance_to_predicate'] = distance
-            #
-            #     # append the feature dict to the list
-            #     sentence_level_feature_dicts.append(distance_feature_dict)
-
     print('Features extracted.')
-    # print(len(categorical_feature_dicts), len(numerical_feature_dicts))
+
     # return the feature dicts and the dataframe
+    
     return df, categorical_feature_dicts, numerical_feature_dicts
 
 
