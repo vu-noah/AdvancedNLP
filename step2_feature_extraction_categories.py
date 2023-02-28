@@ -81,11 +81,12 @@ def get_dependency_path(sent_df, row, cur_pred_is_head, cur_pred_id_in_sent):
             # predicate, therefore there is no possible dependency path to the predicate. We create an empty path '[]'
             if not cur_pred_is_head:
                 dependency_path_to_pred = []
-            brea
+            break
         # if we did not reach the root, we find the next head of the token and continue the while loop
         index = index_head_dict[index]
         
     return dependency_path_to_pred
+
 
 def extract_features_to_determine_roles(filepath):
     """
