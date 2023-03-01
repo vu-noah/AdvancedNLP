@@ -123,9 +123,9 @@ def preprocess_dataset(filepath):
         :return: None
         """
         if datatype == 'train':
-            new_filepath = 'Data/train_data_only_current_candidates.tsv'
+            new_filepath = '../Data/train_data_only_current_candidates.tsv'
         elif datatype == 'test':
-            new_filepath = 'Data/test_data_only_current_candidates.tsv'
+            new_filepath = '../Data/test_data_only_current_candidates.tsv'
 
         df = pd.read_csv(new_filepath, sep='\t', header=None, quotechar='ą', engine='python',
                          names=['token_global_id', 'token_id_in_sent', 'token', 'lemma',
@@ -182,7 +182,7 @@ def preprocess_dataset(filepath):
             df['global_sent_id'] = global_sent_id_column[:-135] + [40481 for _ in range(135)]
 
         # overwrite old files with new information
-        df.to_csv(f'Data/{datatype}_data_only_current_candidates.tsv', sep='\t', mode='w', header=True,
+        df.to_csv(f'../Data/{datatype}_data_only_current_candidates.tsv', sep='\t', mode='w', header=True,
                   index_label='token_individual_id')
 
     add_column_for_unique_sent_id_and_current_predicate(datatype)
