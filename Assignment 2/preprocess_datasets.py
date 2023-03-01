@@ -189,5 +189,5 @@ def preprocess_dataset(filepath):
 
 
 if __name__ == '__main__':
-    preprocess_dataset('Data/en_ewt-up-train.conllu')
-    preprocess_dataset('Data/en_ewt-up-test.conllu')
+    preprocess_dataset('../Data/en_ewt-up-train.conllu')
+    preprocess_dataset('../Data/en_ewt-up-test.conllu')

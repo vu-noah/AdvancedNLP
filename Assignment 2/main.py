@@ -7,8 +7,8 @@ import step2_feature_extraction_categories
 
 
 def main():
-    preprocess_datasets.preprocess_dataset('Data/en_ewt-up-train.conllu')
-    preprocess_datasets.preprocess_dataset('Data/en_ewt-up-test.conllu')
+    preprocess_datasets.preprocess_dataset('../Data/en_ewt-up-train.conllu')
+    preprocess_datasets.preprocess_dataset('../Data/en_ewt-up-test.conllu')
 
     df_train, candidate_cat_feature_dicts_train, candidate_num_feature_dicts_train = \
         step1_feature_extraction_candidates.extract_features_to_determine_candidates('Data/train_data_only_current_candidates.tsv')
