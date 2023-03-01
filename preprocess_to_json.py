@@ -47,6 +47,12 @@ def preprocess_dataset_to_json(filepath):
 
 
 if __name__ == '__main__':
+
+    if os.path.exists('Data/train_data.json'):
+        os.remove('Data/train_data.json')
+    if os.path.exists('Data/test_data.json'):
+        os.remove('Data/test_data.json')
+
     if os.path.exists('Data/train_data_only_current_candidates.tsv'):
         preprocess_dataset_to_json('Data/train_data_only_current_candidates.tsv')
     else:
