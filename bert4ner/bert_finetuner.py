@@ -23,7 +23,7 @@ from torch.utils.data import SequentialSampler
 
 # Initialize Hyperparameters
 EPOCHS = 2
-BERT_MODEL_NAME = "bert-base-cased"
+BERT_MODEL_NAME = "bert-base-multilingual-cased"
 GPU_RUN_IX = 0
 
 SEED_VAL = 1234500

@@ -1,7 +1,7 @@
 from typing import List, Dict, Tuple
 from torch.utils.data import DataLoader
 from transformers import BertTokenizer
-from keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 import torch
 import numpy as np
 import json, datetime, os
