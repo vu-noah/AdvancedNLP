@@ -5,7 +5,6 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 import torch
 import numpy as np
 import json, datetime, os
-from transformers.utils import logging
 import logging, re
 from seqeval.metrics import f1_score, precision_score, recall_score, classification_report
 from transformers.utils.dummy_pt_objects import BertModel
@@ -121,11 +120,37 @@ def get_annotatated_sentence(rows: List, has_labels: bool) -> Tuple[List, List]:
     return x, y
 
 
-def add_to_label_dict(labels:List, label_dict: Dict) -> Dict:
+def add_to_label_dict(labels: list, label_dict: dict) -> dict:
     for l in labels:
         if l not in label_dict:
             label_dict[l] = len(label_dict)
     return label_dict
+
+
+def read_json_srl(filename):
+    """
+
+    :param filename:
+    :return:
+    """
+    all_sentences, all_labels, label_dict = [], [], {}
+
+    with open(filename) as infile:
+        for line in infile.readlines():
+            line = line.strip('\n')
+            sentence_information = json.loads(line)
+
+            sentence = sentence_information['seq_words']
+            labels = sentence_information['BIO']
+
+            all_sentences.append(sentence)
+            all_labels.append(labels)
+
+            label_dict = add_to_label_dict(labels, label_dict)
+
+    logger.info("Read {} Sentences!".format(len(all_sentences)))
+
+    return all_sentences, all_labels, label_dict
 
 
 def read_conll(filename: str, delimiter: str='\t', has_labels: bool=True) -> Tuple[List, List, Dict]:

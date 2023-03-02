@@ -24,9 +24,9 @@ def make_predictions_with_finetuned_model():
     SEQ_MAX_LEN = 256
     BATCH_SIZE = 4
 
-    TEST_DATA_PATH = "Data/trial_mini_data.conll"  # "data/conll2003.dev.conll"
+    TEST_DATA_PATH = "Data/mini_test.json"  # "data/conll2003.dev.conll"
     # TEST_DATA_PATH = "data/trial_unk_data.conll"
-    MODEL_DIR = "saved_models/MY_BERT_NER/"
+    MODEL_DIR = "saved_models/MY_BERT_SRL/"
     LOAD_EPOCH = 1
     INPUTS_PATH = f"{MODEL_DIR}/EPOCH_{LOAD_EPOCH}/model_inputs.txt"
     OUTPUTS_PATH = f"{MODEL_DIR}/EPOCH_{LOAD_EPOCH}/model_outputs.txt"
@@ -42,7 +42,7 @@ def make_predictions_with_finetuned_model():
     index2label = {v: k for k, v in label2index.items()}
 
     # Load File for Predictions
-    test_data, test_labels, _ = utils.read_conll(TEST_DATA_PATH, has_labels=FILE_HAS_GOLD)
+    test_data, test_labels, _ = utils.read_json_srl(TEST_DATA_PATH)
     prediction_inputs, prediction_masks, gold_labels, seq_lens = utils.data_to_tensors(test_data,
                                                                                        tokenizer,
                                                                                        max_len=SEQ_MAX_LEN,
@@ -57,8 +57,9 @@ def make_predictions_with_finetuned_model():
 
         logging.info('Predicting labels for {:,} test sentences...'.format(len(prediction_inputs)))
 
-        results, preds_list = utils.evaluate_bert_model(prediction_dataloader, BATCH_SIZE, model, tokenizer, index2label,
-                                                        PAD_TOKEN_LABEL_ID, full_report=True, prefix="Test Set")
+        results, preds_list = utils.evaluate_bert_model(prediction_dataloader, BATCH_SIZE, model, tokenizer,
+                                                        index2label, PAD_TOKEN_LABEL_ID, full_report=True,
+                                                        prefix="Test Set")
         logging.info("  Test Loss: {0:.2f}".format(results['loss']))
         logging.info("  Precision: {0:.2f} || Recall: {1:.2f} || F1: {2:.2f}".format(results['precision'] * 100,
                                                                                      results['recall'] * 100,
@@ -90,3 +91,7 @@ def make_predictions_with_finetuned_model():
                     logging.info(f"\n----- {seq_ix + 1} -----\n{seq}\nPRED:{predicted_labels}")
                     fin.write(sentence + "\n")
                     fout.write(" ".join(predicted_labels) + "\n")
+
+
+if __name__ == '__main__':
+    make_predictions_with_finetuned_model()

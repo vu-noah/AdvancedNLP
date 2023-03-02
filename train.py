@@ -33,10 +33,10 @@ def fine_tune_bert():
     LEARNING_RATE = 1e-5
     BATCH_SIZE = 4
 
-    TRAIN_DATA_PATH = "Data/trial_mini_data.conll"  # "data/conll2003.train.conll"
-    DEV_DATA_PATH = "Data/trial_mini_data.conll"  # "data/conll2003.dev.conll"
+    TRAIN_DATA_PATH = "Data/mini_train.json"  # "data/conll2003.train.conll"
+    DEV_DATA_PATH = "Data/mini_train.json"  # "data/conll2003.dev.conll"
 
-    SAVE_MODEL_DIR = "saved_models/MY_BERT_NER/"
+    SAVE_MODEL_DIR = "saved_models/MY_BERT_SRL/"
 
     LABELS_FILENAME = f"{SAVE_MODEL_DIR}/label2index.json"
     LOSS_TRN_FILENAME = f"{SAVE_MODEL_DIR}/Losses_Train_{EPOCHS}.json"
@@ -65,7 +65,7 @@ def fine_tune_bert():
     tokenizer = BertTokenizer.from_pretrained(BERT_MODEL_NAME, do_basic_tokenize=False)
 
     # Load Train Dataset
-    train_data, train_labels, train_label2index = utils.read_conll(TRAIN_DATA_PATH, has_labels=True)
+    train_data, train_labels, train_label2index = utils.read_json_srl(TRAIN_DATA_PATH)
     train_inputs, train_masks, train_labels, seq_lengths = utils.data_to_tensors(train_data,
                                                                                  tokenizer,
                                                                                  max_len=SEQ_MAX_LEN,
@@ -81,7 +81,7 @@ def fine_tune_bert():
     train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=BATCH_SIZE)
 
     # Load Dev Dataset
-    dev_data, dev_labels, _ = utils.read_conll(DEV_DATA_PATH, has_labels=True)
+    dev_data, dev_labels, _ = utils.read_json_srl(DEV_DATA_PATH)
     dev_inputs, dev_masks, dev_labels, dev_lens = utils.data_to_tensors(dev_data,
                                                                         tokenizer,
                                                                         max_len=SEQ_MAX_LEN,
@@ -152,7 +152,8 @@ def fine_tune_bert():
                 # Calculate elapsed time in minutes.
                 elapsed = utils.format_time(time.time() - t0)
                 # Report progress.
-                logging.info('  Batch {:>5,}  of  {:>5,}.    Elapsed: {:}.    Loss: {}.'.format(step, len(train_dataloader),
+                logging.info('  Batch {:>5,}  of  {:>5,}.    Elapsed: {:}.    Loss: {}.'.format(step,
+                                                                                                len(train_dataloader),
                                                                                                 elapsed, loss.item()))
 
         # Calculate the average loss over the training data.
@@ -184,3 +185,7 @@ def fine_tune_bert():
     utils.save_losses(loss_dev_values, filename=LOSS_DEV_FILENAME)
     logging.info("")
     logging.info("Training complete!")
+
+
+if __name__ == '__main__':
+    fine_tune_bert()
