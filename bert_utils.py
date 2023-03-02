@@ -127,11 +127,13 @@ def add_to_label_dict(labels: list, label_dict: dict) -> dict:
     return label_dict
 
 
-def read_json_srl(filename):
+def read_json_srl(filename: str) -> tuple[list[list], list[list], dict]:
     """
+    Read in a json file created from an original conllu file and extract the tokens and labels for each sentence as well
+    as a dictionary mapping the labels to a number.
 
-    :param filename:
-    :return:
+    :param str filename: the path to the json file you want to read in
+    :return: all_sentences, all_labels, label_dict
     """
     all_sentences, all_labels, label_dict = [], [], {}
 
