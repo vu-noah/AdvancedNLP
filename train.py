@@ -15,6 +15,7 @@ from transformers import BertForTokenClassification, AdamW
 from transformers import BertTokenizer
 from transformers import get_linear_schedule_with_warmup
 
+
 def fine_tune_bert():
     """
 

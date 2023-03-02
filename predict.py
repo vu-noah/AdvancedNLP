@@ -11,6 +11,7 @@ from transformers import BertTokenizer
 from transformers import pipeline
 from torch.utils.data import SequentialSampler
 
+
 def make_predictions_with_finetuned_model():
     """
 
