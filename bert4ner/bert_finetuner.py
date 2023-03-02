@@ -34,9 +34,6 @@ LEARNING_RATE = 1e-5
 BATCH_SIZE = 4
 
 TRAIN_DATA_PATH = "data/trial_mini_data.conll"  # "data/conll2003.train.conll"
-
-# IMPORTANT NOTE: We use as validation set the test portion, in order to avoid overfitting on the dev set, 
-# and this way be able to evaluate later and compare with your previous models!
 DEV_DATA_PATH = "data/trial_mini_data.conll"  # "data/conll2003.dev.conll"
 
 SAVE_MODEL_DIR = "saved_models/MY_BERT_NER/"
@@ -168,9 +165,7 @@ for epoch_i in range(1, EPOCHS + 1):
     logging.info("  Average training loss: {0:.4f}".format(avg_train_loss))
     logging.info("  Training Epoch took: {:}".format(utils.format_time(time.time() - t0)))
 
-    # ========================================
-    #               Validation
-    # ========================================
+    # Validation
     # After the completion of each training epoch, measure our performance on our validation set.
     t0 = time.time()
     results, preds_list = utils.evaluate_bert_model(dev_dataloader, BATCH_SIZE, model, tokenizer, index2label,
@@ -196,7 +191,7 @@ device, USE_CUDA = utils.get_torch_device(GPU_IX)
 FILE_HAS_GOLD = True
 SEQ_MAX_LEN = 256
 BATCH_SIZE = 4
-# IMPORTANT NOTE: We predict on the dev set to make the results comparable with your previous models from this course
+
 TEST_DATA_PATH = "data/trial_mini_data.conll"  # "data/conll2003.dev.conll"
 # TEST_DATA_PATH = "data/trial_unk_data.conll"
 MODEL_DIR = "saved_models/MY_BERT_NER/"
