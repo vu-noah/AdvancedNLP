@@ -157,9 +157,6 @@ def read_json_srl(filename: str) -> tuple[list[list], list[list], dict]:
 
             label_dict = add_to_label_dict(labels, label_dict)
 
-            print(flagged_sentence)
-            print(flagged_labels)
-
     logger.info("Read {} Sentences!".format(len(all_sentences)))
 
     return all_sentences, all_labels, label_dict
