@@ -40,9 +40,8 @@ def get_torch_device(verbose: bool = True, gpu_ix: int = 0) -> tuple[torch.devic
 device, USE_CUDA = get_torch_device(verbose=False)
 LongTensor = torch.cuda.LongTensor if USE_CUDA else torch.LongTensor
 
-##### Data Loading Functions ##### 
 
-
+##### Data Loading Functions #####
 def wordpieces_to_tokens(wordpieces: list, labelpieces: list = None) -> tuple[list, list]:
     """
 
@@ -249,8 +248,7 @@ def read_json_srl(filename: str) -> tuple[list[list], list[list], dict]:
 #     return all_sentences, all_labels, label_dict
 
 
-##### Evaluation Functions ##### 
-
+##### Evaluation Functions #####
 def evaluate_bert_model(eval_dataloader: DataLoader, eval_batch_size: int, model: BertModel, tokenizer: BertTokenizer,
                         label_map: dict, pad_token_label_id: int, full_report: bool = False, prefix: str = "") \
         -> tuple[dict, list]:
@@ -332,8 +330,7 @@ def evaluate_bert_model(eval_dataloader: DataLoader, eval_batch_size: int, model
     return results, full_word_preds
 
 
-##### Input/Output Functions ##### 
-
+##### Input/Output Functions #####
 def save_losses(losses: dict, filename: str) -> None:
     """
 
@@ -408,9 +405,7 @@ def load_model(model_class, tokenizer_class, model_dir) -> tuple:
     return model, tokenizer
 
 
-##### Misc Functions ##### 
-
-
+##### Misc Functions #####
 def format_time(elapsed: float) -> str:
     """
     Take a time in seconds and return a string in the format hh:mm:ss.
