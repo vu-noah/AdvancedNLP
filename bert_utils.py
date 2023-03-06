@@ -121,9 +121,16 @@ def get_annotatated_sentence(rows: List, has_labels: bool) -> Tuple[List, List]:
 
 
 def add_to_label_dict(labels: list, label_dict: dict) -> dict:
+    """
+
+    :param labels:
+    :param label_dict:
+    :return:
+    """
     for l in labels:
         if l not in label_dict:
             label_dict[l] = len(label_dict)
+
     return label_dict
 
 
@@ -155,7 +162,7 @@ def read_json_srl(filename: str) -> tuple[list[list], list[list], dict]:
             all_sentences.append(flagged_sentence)
             all_labels.append(flagged_labels)
 
-            label_dict = add_to_label_dict(labels, label_dict)
+            label_dict = add_to_label_dict(flagged_labels, label_dict)
 
     logger.info("Read {} Sentences!".format(len(all_sentences)))
 
