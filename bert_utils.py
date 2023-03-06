@@ -130,7 +130,7 @@ def add_to_label_dict(labels: list, label_dict: dict) -> dict:
 def read_json_srl(filename: str) -> tuple[list[list], list[list], dict]:
     """
     Read in a json file created from an original conllu file and extract the tokens and labels for each sentence as well
-    as a dictionary mapping the labels to a number.
+    as a dictionary mapping the labels to a number. Flag the current predicate.
 
     :param str filename: the path to the json file you want to read in
     :return: all_sentences, all_labels, label_dict
@@ -144,11 +144,21 @@ def read_json_srl(filename: str) -> tuple[list[list], list[list], dict]:
 
             sentence = sentence_information['seq_words']
             labels = sentence_information['BIO']
+            predicate_index = sentence_information['pred_sense'][0]
 
-            all_sentences.append(sentence)
-            all_labels.append(labels)
+            flagged_sentence = sentence[:predicate_index] + ['[PRED]'] + [sentence[predicate_index]] + ['[\PRED]'] + \
+                               sentence[predicate_index+1:]
+
+            flagged_labels = labels[:predicate_index] + ['O'] + [labels[predicate_index]] + ['O'] + \
+                             labels[predicate_index+1:]
+
+            all_sentences.append(flagged_sentence)
+            all_labels.append(flagged_labels)
 
             label_dict = add_to_label_dict(labels, label_dict)
+
+            print(flagged_sentence)
+            print(flagged_labels)
 
     logger.info("Read {} Sentences!".format(len(all_sentences)))
 
