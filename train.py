@@ -33,8 +33,8 @@ def fine_tune_bert():
     LEARNING_RATE = 1e-5
     BATCH_SIZE = 4
 
-    TRAIN_DATA_PATH = "Data/mini_train.json"  # "data/conll2003.train.conll"
-    DEV_DATA_PATH = "Data/mini_train.json"  # "data/conll2003.dev.conll"
+    TRAIN_DATA_PATH = "Data/train_data.json"  # "data/conll2003.train.conll"
+    DEV_DATA_PATH = "Data/train_data.json"  # "data/conll2003.dev.conll"
 
     SAVE_MODEL_DIR = "saved_models/MY_BERT_SRL/"
 
