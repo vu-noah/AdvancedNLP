@@ -1,5 +1,6 @@
 # 02.03.2023
 # Predict SR with a loaded model
+# This code was taken from the code provided for the class ML for NLP at VU Amsterdam and has been adapted
 
 import logging
 import sys

@@ -1,3 +1,6 @@
+# 02.03.2023
+# This code was taken from the code provided for the class ML for NLP at VU Amsterdam and has been adapted
+
 import datetime
 import json
 import logging
