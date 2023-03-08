@@ -2,11 +2,7 @@
 # Fine-tune a BERT-based model for SRL
 # This code was taken from the code provided for the class ML for NLP at VU Amsterdam and has been adapted
 
-import logging
-import os
 import random
-import sys
-import time
 import bert_utils as utils
 import numpy as np
 import torch
@@ -25,12 +21,10 @@ def fine_tune_bert():
     # Initialize Hyperparameters
     EPOCHS = 10  # How many times the model should be trained with the data of the whole training set
     BERT_MODEL_NAME = "bert-base-multilingual-cased"  # The exact BERT model you want to use
-    GPU_RUN_IX = 0
     SEED_VAL = 1234500  # Set a fixed random seed, ensures that model performance is not affected by random
     # initialization of parameters and sampling
     SEQ_MAX_LEN = 256  # The maximum length of a sequence that can be used as input, shorter and longer sequences are
     # padded/clipped to fit this length
-    PRINT_INFO_EVERY = 10  # Print status only every X batches
     GRADIENT_CLIP = 1.0  # Largest gradient value, larger values get clipped to 1.0
     LEARNING_RATE = 1e-5  # The learning rate
     BATCH_SIZE = 4  # The batch size, after 4 instances the parameters will be updated
@@ -38,27 +32,14 @@ def fine_tune_bert():
 
     # Define filepaths
     TRAIN_DATA_PATH = "Data/mini_train.json"
-    DEV_DATA_PATH = "Data/mini_dev.json"
-    SAVE_MODEL_DIR = "saved_models/MY_BERT_SRL/"
-    LABELS_FILENAME = f"{SAVE_MODEL_DIR}/label2index.json"
-    LOSS_TRN_FILENAME = f"{SAVE_MODEL_DIR}/Losses_Train_{EPOCHS}.json"
-    LOSS_DEV_FILENAME = f"{SAVE_MODEL_DIR}/Losses_Dev_{EPOCHS}.json"
-
-    if not os.path.exists(SAVE_MODEL_DIR):
-        os.makedirs(SAVE_MODEL_DIR)
+    LABELS_FILENAME = "saved_models/MY_BERT_SRL/label2index.json"
 
     # Initialize Random seeds and validate if there's a GPU available...
-    device, USE_CUDA = utils.get_torch_device(GPU_RUN_IX)
+    device = torch.device("cpu")
     random.seed(SEED_VAL)
     np.random.seed(SEED_VAL)
     torch.manual_seed(SEED_VAL)
     torch.cuda.manual_seed_all(SEED_VAL)
-
-    # Record everything inside a Log File
-    console_hdlr = logging.StreamHandler(sys.stdout)
-    file_hdlr = logging.FileHandler(filename=f"{SAVE_MODEL_DIR}/BERT_TokenClassifier_train_{EPOCHS}.log")
-    logging.basicConfig(level=logging.INFO, handlers=[console_hdlr, file_hdlr])
-    logging.info("Start Logging")
 
     # Load Training and Validation  Datasets
     # Initialize Tokenizer
@@ -80,27 +61,11 @@ def fine_tune_bert():
     train_sampler = RandomSampler(train_data)
     train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=BATCH_SIZE)
 
-    # Load Dev Dataset
-    dev_data, dev_labels, _ = utils.read_json_srl(DEV_DATA_PATH)
-    dev_inputs, dev_masks, dev_labels, dev_lens = utils.data_to_tensors(dev_data,
-                                                                        tokenizer,
-                                                                        max_len=SEQ_MAX_LEN,
-                                                                        labels=dev_labels,
-                                                                        label2index=train_label2index,
-                                                                        pad_token_label_id=PAD_TOKEN_LABEL_ID)
-
-    # Create the DataLoader for our Development set.
-    dev_data = TensorDataset(dev_inputs, dev_masks, dev_labels, dev_lens)
-    dev_sampler = RandomSampler(dev_data)
-    dev_dataloader = DataLoader(dev_data, sampler=dev_sampler, batch_size=BATCH_SIZE)
-
     # Initialize Model Components
     model = BertForTokenClassification.from_pretrained(BERT_MODEL_NAME, num_labels=len(train_label2index))
     model.config.finetuning_task = 'token-classification'
     model.config.id2label = index2label
     model.config.label2id = train_label2index
-    if USE_CUDA:
-        model.cuda()
 
     # Total number of training steps is number of batches * number of epochs.
     total_steps = len(train_dataloader) * EPOCHS
@@ -111,16 +76,10 @@ def fine_tune_bert():
                                                 num_warmup_steps=0,
                                                 num_training_steps=total_steps)
 
-    # Training Cycle(Fine - tunning)
-    loss_trn_values, loss_dev_values = [], []
-
+    # Training Cycle (Fine-tunning)
     for epoch_i in range(1, EPOCHS + 1):
-        # Perform one full pass over the training set.
-        logging.info("")
-        logging.info('======== Epoch {:} / {:} ========'.format(epoch_i, EPOCHS))
-        logging.info('Training...')
 
-        t0 = time.time()
+        # Perform one full pass over the training set.
         total_loss = 0
         model.train()
 
@@ -147,44 +106,8 @@ def fine_tune_bert():
             optimizer.step()
             scheduler.step()
 
-            # Progress update
-            if step % PRINT_INFO_EVERY == 0 and step != 0:
-                # Calculate elapsed time in minutes.
-                elapsed = utils.format_time(time.time() - t0)
-                # Report progress.
-                logging.info('  Batch {:>5,}  of  {:>5,}.    Elapsed: {:}.    Loss: {}.'.format(step,
-                                                                                                len(train_dataloader),
-                                                                                                elapsed, loss.item()))
-
-        # Calculate the average loss over the training data.
-        avg_train_loss = total_loss / len(train_dataloader)
-
-        # Store the loss value for plotting the learning curve.
-        loss_trn_values.append(avg_train_loss)
-
-        logging.info("")
-        logging.info("  Average training loss: {0:.4f}".format(avg_train_loss))
-        logging.info("  Training Epoch took: {:}".format(utils.format_time(time.time() - t0)))
-
-        # Validation
-        # After the completion of each training epoch, measure our performance on our validation set.
-        t0 = time.time()
-        results, preds_list = utils.evaluate_bert_model(dev_dataloader, BATCH_SIZE, model, tokenizer, index2label,
-                                                        PAD_TOKEN_LABEL_ID, prefix="Validation Set")
-        loss_dev_values.append(results['loss'])
-        logging.info("  Validation Loss: {0:.2f}".format(results['loss']))
-        logging.info("  Precision: {0:.2f} || Recall: {1:.2f} || F1: {2:.2f}".format(results['precision'] * 100,
-                                                                                     results['recall'] * 100,
-                                                                                     results['f1'] * 100))
-        logging.info("  Validation took: {:}".format(utils.format_time(time.time() - t0)))
-
         # Save Checkpoint for this Epoch
-        utils.save_model(f"{SAVE_MODEL_DIR}/EPOCH_{epoch_i}", {"args": []}, model, tokenizer)
-
-    utils.save_losses(loss_trn_values, filename=LOSS_TRN_FILENAME)
-    utils.save_losses(loss_dev_values, filename=LOSS_DEV_FILENAME)
-    logging.info("")
-    logging.info("Training complete!")
+        utils.save_model("saved_models/MY_BERT_SRL/EPOCH_{epoch_i}", {"args": []}, model, tokenizer)
 
 
 if __name__ == '__main__':
