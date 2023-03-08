@@ -93,8 +93,6 @@ def data_to_tensors(dataset: list, tokenizer: BertTokenizer, max_len: int, label
         input_ids = tokenizer.convert_tokens_to_ids(wordpieces)
         tokenized_sentences.append(input_ids)
 
-    seq_lengths = [len(s) for s in tokenized_sentences]
-
     # PAD ALL SEQUENCES
     input_ids = pad_sequences(tokenized_sentences, maxlen=max_len, dtype="long", value=0, truncating="post",
                               padding="post")
@@ -115,7 +113,7 @@ def data_to_tensors(dataset: list, tokenizer: BertTokenizer, max_len: int, label
         # Store the attention mask for this sentence.
         attention_masks.append(att_mask)
 
-    return LongTensor(input_ids), LongTensor(attention_masks), label_ids, LongTensor(seq_lengths)
+    return LongTensor(input_ids), LongTensor(attention_masks), label_ids
 
 
 def get_annotatated_sentence(rows: list, has_labels: bool) -> tuple[list, list]:
@@ -202,6 +200,8 @@ def evaluate_bert_model(eval_dataloader: DataLoader, eval_batch_size: int, model
     :param prefix:
     :return:
     """
+    print("***** Running evaluation %s *****", prefix)
+    print("  Batch size = %d", eval_batch_size)
     eval_loss = 0.0
     nb_eval_steps = 0
     preds = None
@@ -236,6 +236,7 @@ def evaluate_bert_model(eval_dataloader: DataLoader, eval_batch_size: int, model
     pred_label_list = [[] for _ in range(gold_label_ids.shape[0])]
     full_word_preds = []
 
+    print(label_map)
     for seq_ix in range(gold_label_ids.shape[0]):
         for j in range(gold_label_ids.shape[1]):
             if gold_label_ids[seq_ix, j] != pad_token_label_id:
@@ -248,6 +249,7 @@ def evaluate_bert_model(eval_dataloader: DataLoader, eval_batch_size: int, model
             full_preds = pred_label_list[seq_ix]
             full_gold = gold_label_list[seq_ix]
             full_word_preds.append((full_words, full_preds))
+            print(f"\n----- {seq_ix + 1} -----\n{full_words}\n\nGOLD: {full_gold}\nPRED:{full_preds}\n")
 
     results = {
         "loss": eval_loss,

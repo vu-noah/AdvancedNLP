@@ -4,11 +4,8 @@
 
 import bert_utils_reduced as utils
 from torch.nn import CrossEntropyLoss
-from torch.utils.data import TensorDataset, DataLoader
-from transformers import BertForTokenClassification
-from transformers import BertTokenizer
-from transformers import pipeline
-from torch.utils.data import SequentialSampler
+from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
+from transformers import BertForTokenClassification, BertTokenizer, pipeline
 
 
 def make_predictions_with_finetuned_model():
@@ -33,15 +30,13 @@ def make_predictions_with_finetuned_model():
 
     # Load File for Predictions
     test_data, test_labels, _ = utils.read_json_srl(TEST_DATA_PATH)
-    prediction_inputs, prediction_masks, gold_labels, seq_lens = utils.data_to_tensors(test_data,
-                                                                                       tokenizer,
-                                                                                       max_len=SEQ_MAX_LEN,
-                                                                                       labels=test_labels,
-                                                                                       label2index=label2index)
+    prediction_inputs, prediction_masks, gold_labels = utils.data_to_tensors(test_data, tokenizer, max_len=SEQ_MAX_LEN,
+                                                                             labels=test_labels,
+                                                                             label2index=label2index)
 
     # Make Predictions
     if FILE_HAS_GOLD:
-        prediction_data = TensorDataset(prediction_inputs, prediction_masks, gold_labels, seq_lens)
+        prediction_data = TensorDataset(prediction_inputs, prediction_masks, gold_labels)
         prediction_sampler = SequentialSampler(prediction_data)
         prediction_dataloader = DataLoader(prediction_data, sampler=prediction_sampler, batch_size=BATCH_SIZE)
 

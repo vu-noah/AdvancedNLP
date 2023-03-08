@@ -8,9 +8,7 @@ import numpy as np
 import torch
 from torch.nn import CrossEntropyLoss
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler
-from transformers import BertForTokenClassification, AdamW
-from transformers import BertTokenizer
-from transformers import get_linear_schedule_with_warmup
+from transformers import BertForTokenClassification, AdamW, BertTokenizer, get_linear_schedule_with_warmup
 
 
 def fine_tune_bert():
@@ -19,7 +17,7 @@ def fine_tune_bert():
     :return:
     """
     # Initialize Hyperparameters
-    EPOCHS = 10  # How many times the model should be trained with the data of the whole training set
+    EPOCHS = 5  # How many times the model should be trained with the data of the whole training set
     BERT_MODEL_NAME = "bert-base-multilingual-cased"  # The exact BERT model you want to use
     SEED_VAL = 1234500  # Set a fixed random seed, ensures that model performance is not affected by random
     # initialization of parameters and sampling
@@ -31,8 +29,8 @@ def fine_tune_bert():
     PAD_TOKEN_LABEL_ID = CrossEntropyLoss().ignore_index  # == -100, label ID for padded tokens
 
     # Define filepaths
-    TRAIN_DATA_PATH = "Data/mini_train.json"
-    LABELS_FILENAME = "saved_models/MY_BERT_SRL/label2index.json"
+    TRAIN_DATA_PATH = "Data/mini_test.json"
+    LABELS_FILENAME = "saved_models/MY_BERT_SRL_reduced/label2index.json"
 
     # Initialize Random seeds and validate if there's a GPU available...
     device = torch.device("cpu")
@@ -41,20 +39,19 @@ def fine_tune_bert():
     torch.manual_seed(SEED_VAL)
     torch.cuda.manual_seed_all(SEED_VAL)
 
-    # Load Training and Validation  Datasets
+    # Load Training Dataset
     # Initialize Tokenizer
     tokenizer = BertTokenizer.from_pretrained(BERT_MODEL_NAME, do_basic_tokenize=False)
 
     # Load Train Dataset
     train_data, train_labels, train_label2index = utils.read_json_srl(TRAIN_DATA_PATH)
-    train_inputs, train_masks, train_labels, seq_lengths = utils.data_to_tensors(train_data,
-                                                                                 tokenizer,
-                                                                                 max_len=SEQ_MAX_LEN,
-                                                                                 labels=train_labels,
-                                                                                 label2index=train_label2index,
-                                                                                 pad_token_label_id=PAD_TOKEN_LABEL_ID)
     utils.save_label_dict(train_label2index, filename=LABELS_FILENAME)
     index2label = {v: k for k, v in train_label2index.items()}
+
+    train_inputs, train_masks, train_labels = utils.data_to_tensors(train_data, tokenizer, max_len=SEQ_MAX_LEN,
+                                                                    labels=train_labels,
+                                                                    label2index=train_label2index,
+                                                                    pad_token_label_id=PAD_TOKEN_LABEL_ID)
 
     # Create the DataLoader for our training set.
     train_data = TensorDataset(train_inputs, train_masks, train_labels)
@@ -67,20 +64,16 @@ def fine_tune_bert():
     model.config.id2label = index2label
     model.config.label2id = train_label2index
 
-    # Total number of training steps is number of batches * number of epochs.
-    total_steps = len(train_dataloader) * EPOCHS
-
     # Create optimizer and the learning rate scheduler.
     optimizer = AdamW(model.parameters(), lr=LEARNING_RATE, eps=1e-8)
-    scheduler = get_linear_schedule_with_warmup(optimizer,
-                                                num_warmup_steps=0,
-                                                num_training_steps=total_steps)
+    # Total number of training steps is number of batches * number of epochs.
+    total_steps = len(train_dataloader) * EPOCHS
+    scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=0, num_training_steps=total_steps)
 
-    # Training Cycle (Fine-tunning)
+    # Training Cycle (Fine-tuning)
     for epoch_i in range(1, EPOCHS + 1):
 
         # Perform one full pass over the training set.
-        total_loss = 0
         model.train()
 
         # For each batch of training data...
@@ -92,12 +85,12 @@ def fine_tune_bert():
             model.zero_grad()
 
             # Perform a forward pass (evaluate the model on this training batch).
-            outputs = model(b_input_ids, attention_mask=b_input_mask, labels=b_labels)
-            loss = outputs[0]
-            total_loss += loss.item()
+            outputs = model(b_input_ids, attention_mask=b_input_mask, labels=b_labels)  # Computes the model's output
+            # on the current batch, including the loss
+            loss = outputs[0]  # Extracts the loss value from the output
 
             # Perform a backward pass to calculate the gradients.
-            loss.backward()
+            loss.backward()  # Performs backward pass to compute the gradients of the loss function
 
             # Clip the norm of the gradients to 1.0.
             torch.nn.utils.clip_grad_norm_(model.parameters(), GRADIENT_CLIP)
@@ -107,7 +100,7 @@ def fine_tune_bert():
             scheduler.step()
 
         # Save Checkpoint for this Epoch
-        utils.save_model("saved_models/MY_BERT_SRL/EPOCH_{epoch_i}", {"args": []}, model, tokenizer)
+        utils.save_model(f"saved_models/MY_BERT_SRL_reduced/EPOCH_{epoch_i}", {"args": []}, model, tokenizer)
 
 
 if __name__ == '__main__':
