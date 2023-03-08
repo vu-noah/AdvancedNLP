@@ -27,7 +27,7 @@ def make_predictions_with_finetuned_model():
 
     TEST_DATA_PATH = "Data/mini_test.json"
     MODEL_DIR = "saved_models/MY_BERT_SRL/"
-    LOAD_EPOCH = 10
+    LOAD_EPOCH = 5
     INPUTS_PATH = f"{MODEL_DIR}/EPOCH_{LOAD_EPOCH}/model_inputs.txt"
     OUTPUTS_PATH = f"{MODEL_DIR}/EPOCH_{LOAD_EPOCH}/model_outputs.txt"
     PAD_TOKEN_LABEL_ID = CrossEntropyLoss().ignore_index  # -100

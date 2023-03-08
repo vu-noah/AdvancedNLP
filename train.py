@@ -23,7 +23,7 @@ def fine_tune_bert():
     :return:
     """
     # Initialize Hyperparameters
-    EPOCHS = 10  # How many times the model should be trained with the data of the whole training set
+    EPOCHS = 5  # How many times the model should be trained with the data of the whole training set
     BERT_MODEL_NAME = "bert-base-multilingual-cased"  # The exact BERT model you want to use
     GPU_RUN_IX = 0
     SEED_VAL = 1234500  # Set a fixed random seed, ensures that model performance is not affected by random

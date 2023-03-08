@@ -2,7 +2,7 @@
 # Predict SR with a loaded model
 # This code was taken from the code provided for the class ML for NLP at VU Amsterdam and has been adapted
 
-import bert_utils as utils
+import bert_utils_reduced as utils
 from torch.nn import CrossEntropyLoss
 from torch.utils.data import TensorDataset, DataLoader
 from transformers import BertForTokenClassification
@@ -22,15 +22,13 @@ def make_predictions_with_finetuned_model():
     BATCH_SIZE = 4
 
     TEST_DATA_PATH = "Data/mini_test.json"
-    MODEL_DIR = "saved_models/MY_BERT_SRL/"
-    LOAD_EPOCH = 10
-    INPUTS_PATH = f"{MODEL_DIR}/EPOCH_{LOAD_EPOCH}/model_inputs.txt"
-    OUTPUTS_PATH = f"{MODEL_DIR}/EPOCH_{LOAD_EPOCH}/model_outputs.txt"
+    INPUTS_PATH = "saved_models/MY_BERT_SRL/EPOCH_10/model_inputs.txt"
+    OUTPUTS_PATH = "saved_models/MY_BERT_SRL/EPOCH_10/model_outputs.txt"
     PAD_TOKEN_LABEL_ID = CrossEntropyLoss().ignore_index  # -100
 
     # Load Pre - trained Model
-    model, tokenizer = utils.load_model(BertForTokenClassification, BertTokenizer, f"{MODEL_DIR}/EPOCH_{LOAD_EPOCH}")
-    label2index = utils.load_label_dict(f"{MODEL_DIR}/label2index.json")
+    model, tokenizer = utils.load_model(BertForTokenClassification, BertTokenizer, "saved_models/MY_BERT_SRL/EPOCH_10")
+    label2index = utils.load_label_dict("saved_models/MY_BERT_SRL/label2index.json")
     index2label = {v: k for k, v in label2index.items()}
 
     # Load File for Predictions

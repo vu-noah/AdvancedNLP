@@ -3,7 +3,7 @@
 # This code was taken from the code provided for the class ML for NLP at VU Amsterdam and has been adapted
 
 import random
-import bert_utils as utils
+import bert_utils_reduced as utils
 import numpy as np
 import torch
 from torch.nn import CrossEntropyLoss
