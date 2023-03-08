@@ -1,6 +1,7 @@
-# 02.03.2023
+# 07.03.2023
 # Fine-tune a BERT-based model for SRL
 # This code was taken from the code provided for the class ML for NLP at VU Amsterdam and has been adapted
+# It only contains the absolutely necessary steps to fine-tune the BERT model
 
 import random
 import bert_utils_reduced as utils

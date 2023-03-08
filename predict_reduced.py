@@ -1,6 +1,7 @@
-# 02.03.2023
+# 07.03.2023
 # Predict SR with a loaded model
 # This code was taken from the code provided for the class ML for NLP at VU Amsterdam and has been adapted
+# It only includes the absolutely necessary steps to make predictions with a fine-tuned BERT model
 
 import bert_utils_reduced as utils
 from torch.nn import CrossEntropyLoss

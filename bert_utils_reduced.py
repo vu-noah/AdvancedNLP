@@ -1,5 +1,6 @@
 # 02.03.2023
 # This code was taken from the code provided for the class ML for NLP at VU Amsterdam and has been adapted
+# It only includes the necessary code, i.e., code that serves a mere informative purpose has been largely removed
 
 import json
 import os
