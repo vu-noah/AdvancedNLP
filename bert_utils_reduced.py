@@ -1,7 +1,6 @@
 # 02.03.2023
 # This code was taken from the code provided for the class ML for NLP at VU Amsterdam and has been adapted
 
-import datetime
 import json
 import os
 import re
@@ -187,41 +186,6 @@ def read_json_srl(filename: str) -> tuple[list[list], list[list], dict]:
     return all_sentences, all_labels, label_dict
 
 
-# def read_conll(filename: str, delimiter: str = '\t', has_labels: bool = True) -> tuple[list, list, dict]:
-#     """
-#
-#     :param filename:
-#     :param delimiter:
-#     :param has_labels:
-#     :return:
-#     """
-#     all_sentences, all_labels, buffer_lst = [], [], []
-#     label_dict = {}
-#     with open(filename) as f:
-#         for line in f.readlines():
-#             row = line.strip('\n').split(delimiter)
-#             if len(row) > 1:
-#                 buffer_lst.append(row)
-#             else:
-#                 sent, labels = get_annotatated_sentence(buffer_lst, has_labels)
-#                 buffer_lst = []
-#                 all_sentences.append(sent)
-#                 if len(labels) > 0:
-#                     all_labels.append(labels)
-#                     label_dict = add_to_label_dict(labels, label_dict)
-#
-#         if len(buffer_lst) > 0:
-#             sent, labels = get_annotatated_sentence(buffer_lst, has_labels)
-#             all_sentences.append(sent)
-#             if labels:
-#                 all_labels.append(labels)
-#                 label_dict = add_to_label_dict(labels, label_dict)
-#
-#     logger.info("Read {} Sentences!".format(len(all_sentences)))
-#
-#     return all_sentences, all_labels, label_dict
-
-
 ##### Evaluation Functions #####
 def evaluate_bert_model(eval_dataloader: DataLoader, eval_batch_size: int, model: BertModel, tokenizer: BertTokenizer,
                         label_map: dict, pad_token_label_id: int, full_report: bool = False, prefix: str = "") \
@@ -370,20 +334,6 @@ def load_model(model_class, tokenizer_class, model_dir) -> tuple:
 
 
 ##### Misc Functions #####
-def format_time(elapsed: float) -> str:
-    """
-    Take a time in seconds and return a string in the format hh:mm:ss.
-
-    :param elapsed:
-    :return:
-    """
-    # Round to the nearest second.
-    elapsed_rounded = int(round(elapsed))
-
-    # Format as hh:mm:ss
-    return str(datetime.timedelta(seconds=elapsed_rounded))
-
-
 def get_bool_value(str_bool: str) -> bool:
     """
 
