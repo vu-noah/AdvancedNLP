@@ -18,14 +18,14 @@ def make_predictions_with_finetuned_model():
     FILE_HAS_GOLD = True
     SEQ_MAX_LEN = 256
     BATCH_SIZE = 4
-
-    TEST_DATA_PATH = "Data/mini_test.json"
-    INPUTS_PATH = "saved_models/MY_BERT_SRL/EPOCH_10/model_inputs.txt"
-    OUTPUTS_PATH = "saved_models/MY_BERT_SRL/EPOCH_10/model_outputs.txt"
     PAD_TOKEN_LABEL_ID = CrossEntropyLoss().ignore_index  # -100
 
-    # Load Pre - trained Model
-    model, tokenizer = utils.load_model(BertForTokenClassification, BertTokenizer, "saved_models/MY_BERT_SRL/EPOCH_10")
+    TEST_DATA_PATH = "Data/mini_test.json"
+    INPUTS_PATH = "saved_models/MY_BERT_SRL/EPOCH_5/model_inputs.txt"
+    OUTPUTS_PATH = "saved_models/MY_BERT_SRL/EPOCH_5/model_outputs.txt"
+
+    # Load Pre-trained Model
+    model, tokenizer = utils.load_model(BertForTokenClassification, BertTokenizer, "saved_models/MY_BERT_SRL/EPOCH_5")
     label2index = utils.load_label_dict("saved_models/MY_BERT_SRL/label2index.json")
     index2label = {v: k for k, v in label2index.items()}
 
@@ -41,9 +41,8 @@ def make_predictions_with_finetuned_model():
         prediction_sampler = SequentialSampler(prediction_data)
         prediction_dataloader = DataLoader(prediction_data, sampler=prediction_sampler, batch_size=BATCH_SIZE)
 
-        results, preds_list = utils.evaluate_bert_model(prediction_dataloader, BATCH_SIZE, model, tokenizer,
-                                                        index2label, PAD_TOKEN_LABEL_ID, full_report=True,
-                                                        prefix="Test Set")
+        results, preds_list = utils.evaluate_bert_model(prediction_dataloader, model, tokenizer,
+                                                        index2label, PAD_TOKEN_LABEL_ID, full_report=True)
 
         print("Test Loss: {0:.2f}".format(results['loss']))
         print("Precision: {0:.2f} || Recall: {1:.2f} || F1: {2:.2f}".format(results['precision'] * 100,
@@ -57,7 +56,7 @@ def make_predictions_with_finetuned_model():
                     fout.write(" ".join(pred) + "\n")
 
     else:
-        nlp = pipeline('token-classification', model=model, tokenizer=tokenizer, device=-1)
+        nlp = pipeline('token-classification', model=model, tokenizer=tokenizer)
         nlp.ignore_labels = []
         with open(OUTPUTS_PATH, "w") as fout:
             with open(INPUTS_PATH, "w") as fin:

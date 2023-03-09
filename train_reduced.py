@@ -45,13 +45,13 @@ def fine_tune_bert():
     tokenizer = BertTokenizer.from_pretrained(BERT_MODEL_NAME, do_basic_tokenize=False)
 
     # Load Train Dataset
-    train_data, train_labels, train_label2index = utils.read_json_srl(TRAIN_DATA_PATH)
-    utils.save_label_dict(train_label2index, filename=LABELS_FILENAME)
-    index2label = {v: k for k, v in train_label2index.items()}
+    train_data, train_labels, label2index = utils.read_json_srl(TRAIN_DATA_PATH)
+    utils.save_label_dict(label2index, filename=LABELS_FILENAME)
+    index2label = {v: k for k, v in label2index.items()}
 
     train_inputs, train_masks, train_labels = utils.data_to_tensors(train_data, tokenizer, max_len=SEQ_MAX_LEN,
                                                                     labels=train_labels,
-                                                                    label2index=train_label2index,
+                                                                    label2index=label2index,
                                                                     pad_token_label_id=PAD_TOKEN_LABEL_ID)
 
     # Create the DataLoader for our training set.
@@ -60,10 +60,10 @@ def fine_tune_bert():
     train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=BATCH_SIZE)
 
     # Initialize Model Components
-    model = BertForTokenClassification.from_pretrained(BERT_MODEL_NAME, num_labels=len(train_label2index))
+    model = BertForTokenClassification.from_pretrained(BERT_MODEL_NAME, num_labels=len(label2index))
     model.config.finetuning_task = 'token-classification'
     model.config.id2label = index2label
-    model.config.label2id = train_label2index
+    model.config.label2id = label2index
 
     # Create optimizer and the learning rate scheduler.
     optimizer = AdamW(model.parameters(), lr=LEARNING_RATE, eps=1e-8)

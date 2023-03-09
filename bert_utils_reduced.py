@@ -186,41 +186,41 @@ def read_json_srl(filename: str) -> tuple[list[list], list[list], dict]:
 
 
 ##### Evaluation Functions #####
-def evaluate_bert_model(eval_dataloader: DataLoader, eval_batch_size: int, model: BertModel, tokenizer: BertTokenizer,
-                        label_map: dict, pad_token_label_id: int, full_report: bool = False, prefix: str = "") \
-        -> tuple[dict, list]:
+def evaluate_bert_model(eval_dataloader: DataLoader, model: BertModel, tokenizer: BertTokenizer,
+                        label_map: dict, pad_token_label_id: int, full_report: bool = False) -> tuple[dict, list]:
     """
 
     :param eval_dataloader:
-    :param eval_batch_size:
     :param model:
     :param tokenizer:
     :param label_map:
     :param pad_token_label_id:
     :param full_report:
-    :param prefix:
     :return:
     """
-    print("***** Running evaluation %s *****", prefix)
-    print("  Batch size = %d", eval_batch_size)
     eval_loss = 0.0
     nb_eval_steps = 0
     preds = None
     input_ids, gold_label_ids = None, None
+
     # Put model on Evaluation Mode!
-    model.eval()
+    model.eval()  # Set the model to evaluation mode
+
     for batch in eval_dataloader:
-        # Add batch to GPU
-        batch = tuple(t.to(device) for t in batch)
 
         # Unpack the inputs from our dataloader
         b_input_ids, b_input_mask, b_labels, b_len = batch
 
+        # Compute the model output, calculate the loss
         with torch.no_grad():
             outputs = model(b_input_ids, attention_mask=b_input_mask, labels=b_labels)
             tmp_eval_loss, logits = outputs[:2]
             eval_loss += tmp_eval_loss.item()
+
+        # Save the number of steps to compute the average loss
         nb_eval_steps += 1
+
+        # Retrieve predictions for every token from the model output, as well as the gold label IDs and input IDs
         if preds is None:
             preds = logits.detach().cpu().numpy()
             gold_label_ids = b_labels.detach().cpu().numpy()
@@ -230,28 +230,30 @@ def evaluate_bert_model(eval_dataloader: DataLoader, eval_batch_size: int, model
             gold_label_ids = np.append(gold_label_ids, b_labels.detach().cpu().numpy(), axis=0)
             input_ids = np.append(input_ids, b_input_ids.detach().cpu().numpy(), axis=0)
 
-    eval_loss = eval_loss / nb_eval_steps
-    preds = np.argmax(preds, axis=2)
+    eval_loss = eval_loss / nb_eval_steps  # Get the average loss for the whole test dataset
+    preds = np.argmax(preds, axis=2)  # Get the actual prediction ID for every token
 
+    # Define lists to store gold labels, predicted labels, and tuples of predictions and reconstructed full words
     gold_label_list = [[] for _ in range(gold_label_ids.shape[0])]
     pred_label_list = [[] for _ in range(gold_label_ids.shape[0])]
     full_word_preds = []
 
-    print(label_map)
+    # Map the label IDs back to the actual labels, only for tokens that are not padding
     for seq_ix in range(gold_label_ids.shape[0]):
         for j in range(gold_label_ids.shape[1]):
             if gold_label_ids[seq_ix, j] != pad_token_label_id:
                 gold_label_list[seq_ix].append(label_map[gold_label_ids[seq_ix][j]])
                 pred_label_list[seq_ix].append(label_map[preds[seq_ix][j]])
 
+        # Reconstruct the original input words and create a list that for every sentence holds the input and the
+        # predictions
         if full_report:
             wordpieces = tokenizer.convert_ids_to_tokens(input_ids[seq_ix], skip_special_tokens=True)
             full_words, _ = wordpieces_to_tokens(wordpieces, labelpieces=None)
             full_preds = pred_label_list[seq_ix]
-            full_gold = gold_label_list[seq_ix]
             full_word_preds.append((full_words, full_preds))
-            print(f"\n----- {seq_ix + 1} -----\n{full_words}\n\nGOLD: {full_gold}\nPRED:{full_preds}\n")
 
+    # Compute the evaluation metrics and store them in a dictionary
     results = {
         "loss": eval_loss,
         "precision": precision_score(gold_label_list, pred_label_list),
@@ -259,6 +261,7 @@ def evaluate_bert_model(eval_dataloader: DataLoader, eval_batch_size: int, model
         "f1": f1_score(gold_label_list, pred_label_list),
     }
 
+    # Print the classification report for the whole dataset
     if full_report:
         print("\n\n" + classification_report(gold_label_list, pred_label_list))
 
