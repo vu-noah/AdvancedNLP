@@ -12,6 +12,7 @@ from transformers import BertForTokenClassification, BertTokenizer, pipeline
 def make_predictions_with_finetuned_model(mode: str = 'token_type_IDs'):
     """
 
+    :param mode:
     :return:
     """
     assert mode == 'token_type_IDs' or mode == 'flag_with_pred_token', 'Mode for training the model wrongly specified.'

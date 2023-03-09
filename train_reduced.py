@@ -15,6 +15,9 @@ from transformers import BertForTokenClassification, AdamW, BertTokenizer, get_l
 def fine_tune_bert(epochs=5, batch_size=4, mode='token_type_IDs'):
     """
 
+    :param epochs:
+    :param batch_size:
+    :param mode:
     :return:
     """
     assert mode == 'token_type_IDs' or mode == 'flag_with_pred_token', 'Mode for training the model wrongly specified.'
