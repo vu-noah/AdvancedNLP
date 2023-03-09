@@ -12,13 +12,15 @@ from torch.utils.data import TensorDataset, DataLoader, RandomSampler
 from transformers import BertForTokenClassification, AdamW, BertTokenizer, get_linear_schedule_with_warmup
 
 
-def fine_tune_bert():
+def fine_tune_bert(epochs=5, batch_size=4, mode='token_type_IDs'):
     """
 
     :return:
     """
+    assert mode == 'token_type_IDs' or mode == 'flag_with_pred_token', 'Mode for training the model wrongly specified.'
+
     # Initialize Hyperparameters
-    EPOCHS = 5  # How many times the model should be trained with the data of the whole training set
+    EPOCHS = epochs  # How many times the model should be trained with the data of the whole training set
     BERT_MODEL_NAME = "bert-base-multilingual-cased"  # The exact BERT model you want to use
     SEED_VAL = 1234500  # Set a fixed random seed, ensures that model performance is not affected by random
     # initialization of parameters and sampling
@@ -26,12 +28,12 @@ def fine_tune_bert():
     # padded/clipped to fit this length
     GRADIENT_CLIP = 1.0  # Largest gradient value, larger values get clipped to 1.0
     LEARNING_RATE = 1e-5  # The learning rate
-    BATCH_SIZE = 4  # The batch size, after 4 instances the parameters will be updated
+    BATCH_SIZE = batch_size  # The batch size, after 4 instances the parameters will be updated
     PAD_TOKEN_LABEL_ID = CrossEntropyLoss().ignore_index  # == -100, label ID for padded tokens
 
     # Define filepaths
     TRAIN_DATA_PATH = "Data/mini_test.json"
-    LABELS_FILENAME = "saved_models/MY_BERT_SRL_reduced/label2index.json"
+    LABELS_FILENAME = "saved_models/MY_BERT_SRL_reduced_flag/label2index.json"
 
     # Initialize Random seeds and validate if there's a GPU available...
     device = torch.device("cpu")
@@ -45,17 +47,19 @@ def fine_tune_bert():
     tokenizer = BertTokenizer.from_pretrained(BERT_MODEL_NAME, do_basic_tokenize=False)
 
     # Load Train Dataset
-    train_data, train_labels, label2index = utils.read_json_srl(TRAIN_DATA_PATH)
+    train_data, train_labels, label2index = utils.read_json_srl(TRAIN_DATA_PATH, mode)
     utils.save_label_dict(label2index, filename=LABELS_FILENAME)
     index2label = {v: k for k, v in label2index.items()}
 
-    train_inputs, train_masks, train_labels = utils.data_to_tensors(train_data, tokenizer, max_len=SEQ_MAX_LEN,
-                                                                    labels=train_labels,
-                                                                    label2index=label2index,
-                                                                    pad_token_label_id=PAD_TOKEN_LABEL_ID)
+    train_inputs, train_masks, train_labels, token_type_IDs = \
+        utils.data_to_tensors(train_data, tokenizer, max_len=SEQ_MAX_LEN, labels=train_labels,
+                              label2index=label2index, pad_token_label_id=PAD_TOKEN_LABEL_ID)
 
     # Create the DataLoader for our training set.
-    train_data = TensorDataset(train_inputs, train_masks, train_labels)
+    if mode == 'token_type_IDs':
+        train_data = TensorDataset(train_inputs, train_masks, train_labels, token_type_IDs)
+    else:
+        train_data = TensorDataset(train_inputs, train_masks, train_labels)
     train_sampler = RandomSampler(train_data)
     train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=BATCH_SIZE)
 
@@ -82,11 +86,17 @@ def fine_tune_bert():
             b_input_ids = batch[0].to(device)
             b_input_mask = batch[1].to(device)
             b_labels = batch[2].to(device)
+            if mode == 'token_type_IDs':
+                b_token_type_IDs = batch[3].to(device)
 
             model.zero_grad()
 
             # Perform a forward pass (evaluate the model on this training batch).
-            outputs = model(b_input_ids, attention_mask=b_input_mask, labels=b_labels)  # Computes the model's output
+            if mode == 'token_type_IDs':
+                outputs = model(b_input_ids, attention_mask=b_input_mask, labels=b_labels,
+                                token_type_ids=b_token_type_IDs)
+            else:
+                outputs = model(b_input_ids, attention_mask=b_input_mask, labels=b_labels)  # Computes the output
             # on the current batch, including the loss
             loss = outputs[0]  # Extracts the loss value from the output
 
@@ -101,7 +111,7 @@ def fine_tune_bert():
             scheduler.step()
 
         # Save Checkpoint for this Epoch
-        utils.save_model(f"saved_models/MY_BERT_SRL_reduced/EPOCH_{epoch_i}", {"args": []}, model, tokenizer)
+        utils.save_model(f"saved_models/MY_BERT_SRL_reduced_flag/EPOCH_{epoch_i}", {"args": []}, model, tokenizer)
 
 
 if __name__ == '__main__':

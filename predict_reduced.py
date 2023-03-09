@@ -9,11 +9,13 @@ from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 from transformers import BertForTokenClassification, BertTokenizer, pipeline
 
 
-def make_predictions_with_finetuned_model():
+def make_predictions_with_finetuned_model(mode: str = 'token_type_IDs'):
     """
 
     :return:
     """
+    assert mode == 'token_type_IDs' or mode == 'flag_with_pred_token', 'Mode for training the model wrongly specified.'
+
     # Use Fine - tuned Model for Predictions
     FILE_HAS_GOLD = True
     SEQ_MAX_LEN = 256
@@ -30,19 +32,21 @@ def make_predictions_with_finetuned_model():
     index2label = {v: k for k, v in label2index.items()}
 
     # Load File for Predictions
-    test_data, test_labels, _ = utils.read_json_srl(TEST_DATA_PATH)
-    prediction_inputs, prediction_masks, gold_labels = utils.data_to_tensors(test_data, tokenizer, max_len=SEQ_MAX_LEN,
-                                                                             labels=test_labels,
-                                                                             label2index=label2index)
+    test_data, test_labels, _ = utils.read_json_srl(TEST_DATA_PATH, mode)
+    prediction_inputs, prediction_masks, gold_labels, token_type_IDs = \
+        utils.data_to_tensors(test_data, tokenizer, max_len=SEQ_MAX_LEN, labels=test_labels, label2index=label2index)
 
     # Make Predictions
     if FILE_HAS_GOLD:
-        prediction_data = TensorDataset(prediction_inputs, prediction_masks, gold_labels)
+        if mode == 'token_type_IDs':
+            prediction_data = TensorDataset(prediction_inputs, prediction_masks, gold_labels, token_type_IDs)
+        else:
+            prediction_data = TensorDataset(prediction_inputs, prediction_masks, gold_labels)
         prediction_sampler = SequentialSampler(prediction_data)
         prediction_dataloader = DataLoader(prediction_data, sampler=prediction_sampler, batch_size=BATCH_SIZE)
 
         results, preds_list = utils.evaluate_bert_model(prediction_dataloader, model, tokenizer,
-                                                        index2label, PAD_TOKEN_LABEL_ID, full_report=True)
+                                                        index2label, PAD_TOKEN_LABEL_ID, full_report=True, mode=mode)
 
         print("Test Loss: {0:.2f}".format(results['loss']))
         print("Precision: {0:.2f} || Recall: {1:.2f} || F1: {2:.2f}".format(results['precision'] * 100,

@@ -17,13 +17,13 @@ from transformers import BertTokenizer
 from transformers import get_linear_schedule_with_warmup
 
 
-def fine_tune_bert():
+def fine_tune_bert(epochs=5, batch_size=4):
     """
 
     :return:
     """
     # Initialize Hyperparameters
-    EPOCHS = 5  # How many times the model should be trained with the data of the whole training set
+    EPOCHS = epochs  # How many times the model should be trained with the data of the whole training set
     BERT_MODEL_NAME = "bert-base-multilingual-cased"  # The exact BERT model you want to use
     GPU_RUN_IX = 0
     SEED_VAL = 1234500  # Set a fixed random seed, ensures that model performance is not affected by random
@@ -33,7 +33,7 @@ def fine_tune_bert():
     PRINT_INFO_EVERY = 10  # Print status only every X batches
     GRADIENT_CLIP = 1.0  # Largest gradient value, larger values get clipped to 1.0
     LEARNING_RATE = 1e-5  # The learning rate
-    BATCH_SIZE = 4  # The batch size, after 4 instances the parameters will be updated
+    BATCH_SIZE = batch_size  # The batch size, after 4 instances the parameters will be updated
     PAD_TOKEN_LABEL_ID = CrossEntropyLoss().ignore_index  # == -100, label ID for padded tokens
 
     # Define filepaths
