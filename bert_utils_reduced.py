@@ -204,9 +204,9 @@ def read_json_srl(filename: str, mode: str = 'token_type_IDs') -> tuple[list[lis
 
 
 ##### Evaluation Functions #####
-def evaluate_bert_model(eval_dataloader: DataLoader, model: BertModel, tokenizer: BertTokenizer,
-                        label_map: dict, pad_token_label_id: int, full_report: bool = False,
-                        mode: str = 'token_type_IDs') -> tuple[dict, list]:
+def evaluate_bert_model(eval_dataloader: DataLoader, model: BertModel, tokenizer: BertTokenizer, label_map: dict,
+                        pad_token_label_id: int, full_report: bool = False, mode: str = 'token_type_IDs') \
+        -> tuple[dict, list]:
     """
 
     :param mode:
@@ -242,6 +242,7 @@ def evaluate_bert_model(eval_dataloader: DataLoader, model: BertModel, tokenizer
                                 token_type_ids=b_token_type_IDs)
             else:
                 outputs = model(b_input_ids, attention_mask=b_input_mask, labels=b_labels)
+
             tmp_eval_loss, logits = outputs[:2]
             eval_loss += tmp_eval_loss.item()
 

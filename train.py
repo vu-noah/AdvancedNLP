@@ -17,11 +17,16 @@ from transformers import BertTokenizer
 from transformers import get_linear_schedule_with_warmup
 
 
-def fine_tune_bert(epochs=5, batch_size=4):
+def fine_tune_bert(epochs: int = 5, batch_size: int = 4, mode: str = 'token_type_IDs'):
     """
 
+    :param epochs:
+    :param batch_size:
+    :param mode:
     :return:
     """
+    assert mode == 'token_type_IDs' or mode == 'flag_with_pred_token', 'Mode for training the model wrongly specified.'
+
     # Initialize Hyperparameters
     EPOCHS = epochs  # How many times the model should be trained with the data of the whole training set
     BERT_MODEL_NAME = "bert-base-multilingual-cased"  # The exact BERT model you want to use
@@ -65,56 +70,55 @@ def fine_tune_bert(epochs=5, batch_size=4):
     tokenizer = BertTokenizer.from_pretrained(BERT_MODEL_NAME, do_basic_tokenize=False)
 
     # Load Train Dataset
-    train_data, train_labels, train_label2index = utils.read_json_srl(TRAIN_DATA_PATH)
-    train_inputs, train_masks, train_labels, seq_lengths = utils.data_to_tensors(train_data,
-                                                                                 tokenizer,
-                                                                                 max_len=SEQ_MAX_LEN,
-                                                                                 labels=train_labels,
-                                                                                 label2index=train_label2index,
-                                                                                 pad_token_label_id=PAD_TOKEN_LABEL_ID)
-    utils.save_label_dict(train_label2index, filename=LABELS_FILENAME)
-    index2label = {v: k for k, v in train_label2index.items()}
+    train_data, train_labels, label2index = utils.read_json_srl(TRAIN_DATA_PATH, mode)
+    utils.save_label_dict(label2index, filename=LABELS_FILENAME)
+    index2label = {v: k for k, v in label2index.items()}
+
+    train_inputs, train_masks, train_labels, seq_lengths, token_type_IDs = \
+        utils.data_to_tensors(train_data, tokenizer, max_len=SEQ_MAX_LEN, labels=train_labels, label2index=label2index,
+                              pad_token_label_id=PAD_TOKEN_LABEL_ID)
 
     # Create the DataLoader for our training set.
-    train_data = TensorDataset(train_inputs, train_masks, train_labels)
+    if mode == 'token_type_IDs':
+        train_data = TensorDataset(train_inputs, train_masks, train_labels, seq_lengths, token_type_IDs)
+    else:
+        train_data = TensorDataset(train_inputs, train_masks, train_labels, seq_lengths)
     train_sampler = RandomSampler(train_data)
     train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=BATCH_SIZE)
 
     # Load Dev Dataset
-    dev_data, dev_labels, _ = utils.read_json_srl(DEV_DATA_PATH)
-    dev_inputs, dev_masks, dev_labels, dev_lens = utils.data_to_tensors(dev_data,
-                                                                        tokenizer,
-                                                                        max_len=SEQ_MAX_LEN,
-                                                                        labels=dev_labels,
-                                                                        label2index=train_label2index,
-                                                                        pad_token_label_id=PAD_TOKEN_LABEL_ID)
+    dev_data, dev_labels, _ = utils.read_json_srl(DEV_DATA_PATH, mode)
+    dev_inputs, dev_masks, dev_labels, dev_lens, dev_token_type_IDs = \
+        utils.data_to_tensors(dev_data, tokenizer, max_len=SEQ_MAX_LEN, labels=dev_labels, label2index=label2index,
+                              pad_token_label_id=PAD_TOKEN_LABEL_ID)
 
     # Create the DataLoader for our Development set.
-    dev_data = TensorDataset(dev_inputs, dev_masks, dev_labels, dev_lens)
+    if mode == 'token_type_IDs':
+        dev_data = TensorDataset(dev_inputs, dev_masks, dev_labels, dev_lens, dev_token_type_IDs)
+    else:
+        dev_data = TensorDataset(dev_inputs, dev_masks, dev_labels, dev_lens)
     dev_sampler = RandomSampler(dev_data)
     dev_dataloader = DataLoader(dev_data, sampler=dev_sampler, batch_size=BATCH_SIZE)
 
     # Initialize Model Components
-    model = BertForTokenClassification.from_pretrained(BERT_MODEL_NAME, num_labels=len(train_label2index))
+    model = BertForTokenClassification.from_pretrained(BERT_MODEL_NAME, num_labels=len(label2index))
     model.config.finetuning_task = 'token-classification'
     model.config.id2label = index2label
-    model.config.label2id = train_label2index
+    model.config.label2id = label2index
     if USE_CUDA:
         model.cuda()
 
-    # Total number of training steps is number of batches * number of epochs.
-    total_steps = len(train_dataloader) * EPOCHS
-
     # Create optimizer and the learning rate scheduler.
     optimizer = AdamW(model.parameters(), lr=LEARNING_RATE, eps=1e-8)
-    scheduler = get_linear_schedule_with_warmup(optimizer,
-                                                num_warmup_steps=0,
-                                                num_training_steps=total_steps)
+    # Total number of training steps is number of batches * number of epochs.
+    total_steps = len(train_dataloader) * EPOCHS
+    scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=0, num_training_steps=total_steps)
 
-    # Training Cycle(Fine - tunning)
+    # Training Cycle(Fine-tunning)
     loss_trn_values, loss_dev_values = [], []
 
     for epoch_i in range(1, EPOCHS + 1):
+
         # Perform one full pass over the training set.
         logging.info("")
         logging.info('======== Epoch {:} / {:} ========'.format(epoch_i, EPOCHS))
@@ -129,11 +133,18 @@ def fine_tune_bert(epochs=5, batch_size=4):
             b_input_ids = batch[0].to(device)
             b_input_mask = batch[1].to(device)
             b_labels = batch[2].to(device)
+            if mode == 'token_type_IDs':
+                b_token_type_IDs = batch[4].to(device)
 
             model.zero_grad()
 
-            # Perform a forward pass (evaluate the model on this training batch).
-            outputs = model(b_input_ids, attention_mask=b_input_mask, labels=b_labels)
+            # Perform a forward pass (evaluate the model on this training batch)
+            if mode == 'token_type_IDs':
+                outputs = model(b_input_ids, attention_mask=b_input_mask, labels=b_labels,
+                                token_type_ids=b_token_type_IDs)
+            else:
+                outputs = model(b_input_ids, attention_mask=b_input_mask, labels=b_labels)
+
             loss = outputs[0]
             total_loss += loss.item()
 
@@ -171,6 +182,7 @@ def fine_tune_bert(epochs=5, batch_size=4):
         t0 = time.time()
         results, preds_list = utils.evaluate_bert_model(dev_dataloader, BATCH_SIZE, model, tokenizer, index2label,
                                                         PAD_TOKEN_LABEL_ID, prefix="Validation Set")
+
         loss_dev_values.append(results['loss'])
         logging.info("  Validation Loss: {0:.2f}".format(results['loss']))
         logging.info("  Precision: {0:.2f} || Recall: {1:.2f} || F1: {2:.2f}".format(results['precision'] * 100,

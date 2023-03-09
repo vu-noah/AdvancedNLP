@@ -65,7 +65,7 @@ def wordpieces_to_tokens(wordpieces: list, labelpieces: list = None) -> tuple[li
 
 
 def expand_to_wordpieces(original_sentence: list, tokenizer: BertTokenizer, original_labels: list = None) \
-        -> tuple[list, list]:
+        -> tuple[list, list, list]:
     """
     Also Expands BIO, but assigns the original label ONLY to the Head of the WordPiece (First WP)
     :param original_sentence: List of Full-Words
@@ -78,6 +78,7 @@ def expand_to_wordpieces(original_sentence: list, tokenizer: BertTokenizer, orig
     word_pieces = tokenizer.tokenize(txt_sentence)
 
     if original_labels:
+        token_type_IDs = [0] * len(word_pieces)
         tmp_labels, lbl_ix = [], 0
         head_tokens = [1] * len(word_pieces)
         for i, tok in enumerate(word_pieces):
@@ -86,15 +87,18 @@ def expand_to_wordpieces(original_sentence: list, tokenizer: BertTokenizer, orig
                 head_tokens[i] = 0
             else:
                 tmp_labels.append(original_labels[lbl_ix])
+                if original_labels[lbl_ix] == 'B-V':
+                    token_type_IDs[i] = 1
                 lbl_ix += 1
 
         word_pieces = ["[CLS]"] + word_pieces + ["[SEP]"]
         labels = ["X"] + tmp_labels + ["X"]
+        token_type_IDs = [0] + token_type_IDs + [0]
 
-        return word_pieces, labels
+        return word_pieces, labels, token_type_IDs
 
     else:
-        return word_pieces, []
+        return word_pieces, [], []
         
 
 def data_to_tensors(dataset: list, tokenizer: BertTokenizer, max_len: int, labels: list = None,
@@ -109,29 +113,41 @@ def data_to_tensors(dataset: list, tokenizer: BertTokenizer, max_len: int, label
     :param pad_token_label_id:
     :return:
     """
-    tokenized_sentences, label_indices = [], []
+    tokenized_sentences, label_indices, token_type_IDs_list = [], [], []
 
     for i, sentence in enumerate(dataset):
         # Get WordPiece Indices
         if labels and label2index:
-            wordpieces, labelset = expand_to_wordpieces(sentence, tokenizer, labels[i])
+            wordpieces, labelset, token_type_IDs = expand_to_wordpieces(sentence, tokenizer, labels[i])
             label_indices.append([label2index.get(lbl, pad_token_label_id) for lbl in labelset])
+            token_type_IDs_list.append(token_type_IDs)
         else:
-            wordpieces, labelset = expand_to_wordpieces(sentence, tokenizer, None)
+            wordpieces, labelset, token_type_IDs = expand_to_wordpieces(sentence, tokenizer, None)
         input_ids = tokenizer.convert_tokens_to_ids(wordpieces)
         tokenized_sentences.append(input_ids)
 
     seq_lengths = [len(s) for s in tokenized_sentences]
     logger.info(f"MAX TOKENIZED SEQ LENGTH IN DATASET IS {max(seq_lengths)}")
+
     # PAD ALL SEQUENCES
     input_ids = pad_sequences(tokenized_sentences, maxlen=max_len, dtype="long", value=0, truncating="post",
                               padding="post")
+
     if label_indices:
         label_ids = pad_sequences(label_indices, maxlen=max_len, dtype="long", value=pad_token_label_id,
                                   truncating="post", padding="post")
         label_ids = LongTensor(label_ids)
     else:
         label_ids = None
+
+    # make sure to also pad the token type IDs
+    if token_type_IDs_list:
+        token_type_IDs = pad_sequences(token_type_IDs_list, maxlen=max_len, dtype="long", value=0, truncating="post",
+                                       padding="post")
+        token_type_IDs = LongTensor(token_type_IDs)
+    else:
+        token_type_IDs = None
+
     # Create attention masks
     attention_masks = []
     # For each sentence...
@@ -143,7 +159,7 @@ def data_to_tensors(dataset: list, tokenizer: BertTokenizer, max_len: int, label
         # Store the attention mask for this sentence.
         attention_masks.append(att_mask)
 
-    return LongTensor(input_ids), LongTensor(attention_masks), label_ids,  LongTensor(seq_lengths)
+    return LongTensor(input_ids), LongTensor(attention_masks), label_ids,  LongTensor(seq_lengths), token_type_IDs
 
 
 def get_annotatated_sentence(rows: list, has_labels: bool) -> tuple[list, list]:
@@ -181,12 +197,14 @@ def add_to_label_dict(labels: list, label_dict: dict) -> dict:
     return label_dict
 
 
-def read_json_srl(filename: str) -> tuple[list[list], list[list], dict]:
+def read_json_srl(filename: str, mode: str = 'token_type_IDs') -> tuple[list[list], list[list], dict]:
     """
     Read in a json file created from an original conllu file and extract the tokens and labels for each sentence as well
     as a dictionary mapping the labels to a number. Flag the current predicate.
 
     :param str filename: the path to the json file you want to read in
+    :param mode: the way you want to perform fine-tuning, either by flagging the current predicate with special
+    tokens or by adding a different token type ID for the current predicate
     :return: all_sentences, all_labels, label_dict
     """
     all_sentences, all_labels, label_dict = [], [], {}
@@ -200,16 +218,17 @@ def read_json_srl(filename: str) -> tuple[list[list], list[list], dict]:
             labels = sentence_information['BIO']
             predicate_index = sentence_information['pred_sense'][0]
 
-            flagged_sentence = sentence[:predicate_index] + ['[PRED]'] + [sentence[predicate_index]] + ['[\PRED]'] + \
-                               sentence[predicate_index+1:]
+            if mode == 'flag_with_pred_token':
+                sentence = sentence[:predicate_index] + ['[PRED]'] + [sentence[predicate_index]] + ['[\PRED]'] + \
+                                   sentence[predicate_index+1:]
 
-            flagged_labels = labels[:predicate_index] + ['O'] + [labels[predicate_index]] + ['O'] + \
-                             labels[predicate_index+1:]
+                labels = labels[:predicate_index] + ['O'] + [labels[predicate_index]] + ['O'] + \
+                                 labels[predicate_index+1:]
 
-            all_sentences.append(flagged_sentence)
-            all_labels.append(flagged_labels)
+            all_sentences.append(sentence)
+            all_labels.append(labels)
 
-            label_dict = add_to_label_dict(flagged_labels, label_dict)
+            label_dict = add_to_label_dict(labels, label_dict)
 
     logger.info("Read {} Sentences!".format(len(all_sentences)))
 
@@ -253,8 +272,8 @@ def read_json_srl(filename: str) -> tuple[list[list], list[list], dict]:
 
 ##### Evaluation Functions #####
 def evaluate_bert_model(eval_dataloader: DataLoader, eval_batch_size: int, model: BertModel, tokenizer: BertTokenizer,
-                        label_map: dict, pad_token_label_id: int, full_report: bool = False, prefix: str = "") \
-        -> tuple[dict, list]:
+                        label_map: dict, pad_token_label_id: int, full_report: bool = False, prefix: str = "",
+                        mode: str = 'token_type_IDs') -> tuple[dict, list]:
     """
 
     :param eval_dataloader:
@@ -265,6 +284,7 @@ def evaluate_bert_model(eval_dataloader: DataLoader, eval_batch_size: int, model
     :param pad_token_label_id:
     :param full_report:
     :param prefix:
+    :param mode:
     :return:
     """
     logger.info("***** Running evaluation %s *****", prefix)
@@ -273,20 +293,37 @@ def evaluate_bert_model(eval_dataloader: DataLoader, eval_batch_size: int, model
     nb_eval_steps = 0
     preds = None
     input_ids, gold_label_ids = None, None
+
     # Put model on Evaluation Mode!
     model.eval()
+
     for batch in eval_dataloader:
+
         # Add batch to GPU
         batch = tuple(t.to(device) for t in batch)
 
         # Unpack the inputs from our dataloader
-        b_input_ids, b_input_mask, b_labels, b_len = batch
+        b_input_ids = batch[0]
+        b_input_mask = batch[1]
+        b_labels = batch[2]
+        if mode == 'token_type_IDs':
+            b_token_type_IDs = batch[3]
 
+        # Compute the model output, calculate the loss
         with torch.no_grad():
-            outputs = model(b_input_ids, attention_mask=b_input_mask, labels=b_labels)
+            if mode == 'token_type_IDs':
+                outputs = model(b_input_ids, attention_mask=b_input_mask, labels=b_labels,
+                                token_type_ids=b_token_type_IDs)
+            else:
+                outputs = model(b_input_ids, attention_mask=b_input_mask, labels=b_labels)
+
             tmp_eval_loss, logits = outputs[:2]
             eval_loss += tmp_eval_loss.item()
+
+        # Save the number of steps to compute the average loss
         nb_eval_steps += 1
+
+        # Retrieve predictions for every token from the model output, as well as the gold label IDs and input IDs
         if preds is None:
             preds = logits.detach().cpu().numpy()
             gold_label_ids = b_labels.detach().cpu().numpy()
@@ -296,13 +333,15 @@ def evaluate_bert_model(eval_dataloader: DataLoader, eval_batch_size: int, model
             gold_label_ids = np.append(gold_label_ids, b_labels.detach().cpu().numpy(), axis=0)
             input_ids = np.append(input_ids, b_input_ids.detach().cpu().numpy(), axis=0)
 
-    eval_loss = eval_loss / nb_eval_steps
-    preds = np.argmax(preds, axis=2)
+    eval_loss = eval_loss / nb_eval_steps  # Get the average loss for the whole test dataset
+    preds = np.argmax(preds, axis=2)  # Get the actual prediction ID for every token
 
+    # Define lists to store gold labels, predicted labels, and tuples of predictions and reconstructed full words
     gold_label_list = [[] for _ in range(gold_label_ids.shape[0])]
     pred_label_list = [[] for _ in range(gold_label_ids.shape[0])]
     full_word_preds = []
 
+    # Map the label IDs back to the actual labels, only for tokens that are not padding
     logger.info(label_map)
     for seq_ix in range(gold_label_ids.shape[0]):
         for j in range(gold_label_ids.shape[1]):
@@ -310,7 +349,8 @@ def evaluate_bert_model(eval_dataloader: DataLoader, eval_batch_size: int, model
                 gold_label_list[seq_ix].append(label_map[gold_label_ids[seq_ix][j]])
                 pred_label_list[seq_ix].append(label_map[preds[seq_ix][j]])
 
-
+        # Reconstruct the original input words and create a list that for every sentence holds the input and the
+        # predictions
         if full_report:
             wordpieces = tokenizer.convert_ids_to_tokens(input_ids[seq_ix], skip_special_tokens=True) 
             full_words, _ = wordpieces_to_tokens(wordpieces, labelpieces=None)
@@ -318,8 +358,8 @@ def evaluate_bert_model(eval_dataloader: DataLoader, eval_batch_size: int, model
             full_gold = gold_label_list[seq_ix]
             full_word_preds.append((full_words, full_preds))
             logger.info(f"\n----- {seq_ix+1} -----\n{full_words}\n\nGOLD: {full_gold}\nPRED:{full_preds}\n")
-           
 
+    # Compute the evaluation metrics and store them in a dictionary
     results = {
         "loss": eval_loss,
         "precision": precision_score(gold_label_list, pred_label_list),
@@ -327,6 +367,7 @@ def evaluate_bert_model(eval_dataloader: DataLoader, eval_batch_size: int, model
         "f1": f1_score(gold_label_list, pred_label_list),
     }
 
+    # Print the classification report for the whole dataset
     if full_report:
         logger.info("\n\n"+classification_report(gold_label_list, pred_label_list))
 

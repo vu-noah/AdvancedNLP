@@ -12,7 +12,7 @@ from torch.utils.data import TensorDataset, DataLoader, RandomSampler
 from transformers import BertForTokenClassification, AdamW, BertTokenizer, get_linear_schedule_with_warmup
 
 
-def fine_tune_bert(epochs=5, batch_size=4, mode='token_type_IDs'):
+def fine_tune_bert(epochs: int = 5, batch_size: int = 4, mode: str = 'token_type_IDs'):
     """
 
     :param epochs:
@@ -36,7 +36,7 @@ def fine_tune_bert(epochs=5, batch_size=4, mode='token_type_IDs'):
 
     # Define filepaths
     TRAIN_DATA_PATH = "Data/mini_test.json"
-    LABELS_FILENAME = "saved_models/MY_BERT_SRL_reduced_flag/label2index.json"
+    LABELS_FILENAME = "saved_models/MY_BERT_SRL/label2index.json"
 
     # Initialize Random seeds and validate if there's a GPU available...
     device = torch.device("cpu")
@@ -55,8 +55,8 @@ def fine_tune_bert(epochs=5, batch_size=4, mode='token_type_IDs'):
     index2label = {v: k for k, v in label2index.items()}
 
     train_inputs, train_masks, train_labels, token_type_IDs = \
-        utils.data_to_tensors(train_data, tokenizer, max_len=SEQ_MAX_LEN, labels=train_labels,
-                              label2index=label2index, pad_token_label_id=PAD_TOKEN_LABEL_ID)
+        utils.data_to_tensors(train_data, tokenizer, max_len=SEQ_MAX_LEN, labels=train_labels, label2index=label2index,
+                              pad_token_label_id=PAD_TOKEN_LABEL_ID)
 
     # Create the DataLoader for our training set.
     if mode == 'token_type_IDs':
@@ -94,7 +94,7 @@ def fine_tune_bert(epochs=5, batch_size=4, mode='token_type_IDs'):
 
             model.zero_grad()
 
-            # Perform a forward pass (evaluate the model on this training batch).
+            # Perform a forward pass (evaluate the model on this training batch)
             if mode == 'token_type_IDs':
                 outputs = model(b_input_ids, attention_mask=b_input_mask, labels=b_labels,
                                 token_type_ids=b_token_type_IDs)

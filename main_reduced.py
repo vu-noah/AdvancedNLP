@@ -6,4 +6,4 @@ from predict_reduced import make_predictions_with_finetuned_model
 
 if __name__ == '__main__':
     fine_tune_bert(epochs=1, batch_size=4, mode='token_type_IDs')
-    make_predictions_with_finetuned_model(mode='token_type_IDs')
+    make_predictions_with_finetuned_model(batch_size=4, load_epoch=1, has_gold=True, mode='token_type_IDs')

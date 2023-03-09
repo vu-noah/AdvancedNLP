@@ -13,21 +13,28 @@ from transformers import pipeline
 from torch.utils.data import SequentialSampler
 
 
-def make_predictions_with_finetuned_model():
+def make_predictions_with_finetuned_model(batch_size: int = 4, load_epoch: int = 1, has_gold: bool = True,
+                                          mode: str = 'token_type_IDs'):
     """
 
+    :param batch_size:
+    :param load_epoch:
+    :param has_gold:
+    :param mode:
     :return:
     """
-    # Use Fine - tuned Model for Predictions
+    assert mode == 'token_type_IDs' or mode == 'flag_with_pred_token', 'Mode for training the model wrongly specified.'
+
+    # Use Fine-tuned Model for Predictions
     GPU_IX = 0
     device, USE_CUDA = utils.get_torch_device(GPU_IX)
-    FILE_HAS_GOLD = True
+    FILE_HAS_GOLD = has_gold
     SEQ_MAX_LEN = 256
-    BATCH_SIZE = 4
+    BATCH_SIZE = batch_size
 
     TEST_DATA_PATH = "Data/mini_test.json"
     MODEL_DIR = "saved_models/MY_BERT_SRL/"
-    LOAD_EPOCH = 5
+    LOAD_EPOCH = load_epoch
     INPUTS_PATH = f"{MODEL_DIR}/EPOCH_{LOAD_EPOCH}/model_inputs.txt"
     OUTPUTS_PATH = f"{MODEL_DIR}/EPOCH_{LOAD_EPOCH}/model_outputs.txt"
     PAD_TOKEN_LABEL_ID = CrossEntropyLoss().ignore_index  # -100
@@ -42,16 +49,16 @@ def make_predictions_with_finetuned_model():
     index2label = {v: k for k, v in label2index.items()}
 
     # Load File for Predictions
-    test_data, test_labels, _ = utils.read_json_srl(TEST_DATA_PATH)
-    prediction_inputs, prediction_masks, gold_labels, seq_lens = utils.data_to_tensors(test_data,
-                                                                                       tokenizer,
-                                                                                       max_len=SEQ_MAX_LEN,
-                                                                                       labels=test_labels,
-                                                                                       label2index=label2index)
+    test_data, test_labels, _ = utils.read_json_srl(TEST_DATA_PATH, mode)
+    prediction_inputs, prediction_masks, gold_labels, seq_lens, token_type_IDs = \
+        utils.data_to_tensors(test_data, tokenizer, max_len=SEQ_MAX_LEN, labels=test_labels, label2index=label2index)
 
     # Make Predictions
     if FILE_HAS_GOLD:
-        prediction_data = TensorDataset(prediction_inputs, prediction_masks, gold_labels, seq_lens)
+        if mode == 'token_type_IDs':
+            prediction_data = TensorDataset(prediction_inputs, prediction_masks, gold_labels, seq_lens, token_type_IDs)
+        else:
+            prediction_data = TensorDataset(prediction_inputs, prediction_masks, gold_labels, seq_lens)
         prediction_sampler = SequentialSampler(prediction_data)
         prediction_dataloader = DataLoader(prediction_data, sampler=prediction_sampler, batch_size=BATCH_SIZE)
 
@@ -59,7 +66,8 @@ def make_predictions_with_finetuned_model():
 
         results, preds_list = utils.evaluate_bert_model(prediction_dataloader, BATCH_SIZE, model, tokenizer,
                                                         index2label, PAD_TOKEN_LABEL_ID, full_report=True,
-                                                        prefix="Test Set")
+                                                        prefix="Test Set", mode=mode)
+
         logging.info("  Test Loss: {0:.2f}".format(results['loss']))
         logging.info("  Precision: {0:.2f} || Recall: {1:.2f} || F1: {2:.2f}".format(results['precision'] * 100,
                                                                                      results['recall'] * 100,
@@ -72,7 +80,6 @@ def make_predictions_with_finetuned_model():
                     fout.write(" ".join(pred) + "\n")
 
     else:
-        # https://huggingface.co/transformers/main_classes/pipelines.html#transformers.TokenClassificationPipeline
         logging.info('Predicting labels for {:,} test sentences...'.format(len(test_data)))
         if not USE_CUDA:
             GPU_IX = -1

@@ -9,26 +9,32 @@ from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 from transformers import BertForTokenClassification, BertTokenizer, pipeline
 
 
-def make_predictions_with_finetuned_model(mode: str = 'token_type_IDs'):
+def make_predictions_with_finetuned_model(batch_size: int = 4, load_epoch: int = 1, has_gold: bool = True, 
+                                          mode: str = 'token_type_IDs'):
     """
 
+    :param batch_size:
+    :param load_epoch:
+    :param has_gold:
     :param mode:
     :return:
     """
     assert mode == 'token_type_IDs' or mode == 'flag_with_pred_token', 'Mode for training the model wrongly specified.'
 
-    # Use Fine - tuned Model for Predictions
-    FILE_HAS_GOLD = True
+    # Use Fine-tuned Model for Predictions
+    FILE_HAS_GOLD = has_gold
     SEQ_MAX_LEN = 256
-    BATCH_SIZE = 4
+    BATCH_SIZE = batch_size
     PAD_TOKEN_LABEL_ID = CrossEntropyLoss().ignore_index  # -100
+    LOAD_EPOCH = load_epoch
 
     TEST_DATA_PATH = "Data/mini_test.json"
-    INPUTS_PATH = "saved_models/MY_BERT_SRL/EPOCH_5/model_inputs.txt"
-    OUTPUTS_PATH = "saved_models/MY_BERT_SRL/EPOCH_5/model_outputs.txt"
+    INPUTS_PATH = f"saved_models/MY_BERT_SRL/{LOAD_EPOCH}/model_inputs.txt"
+    OUTPUTS_PATH = f"saved_models/MY_BERT_SRL/{LOAD_EPOCH}/model_outputs.txt"
 
     # Load Pre-trained Model
-    model, tokenizer = utils.load_model(BertForTokenClassification, BertTokenizer, "saved_models/MY_BERT_SRL/EPOCH_5")
+    model, tokenizer = utils.load_model(BertForTokenClassification, BertTokenizer,
+                                        f"saved_models/MY_BERT_SRL/{LOAD_EPOCH}")
     label2index = utils.load_label_dict("saved_models/MY_BERT_SRL/label2index.json")
     index2label = {v: k for k, v in label2index.items()}
 
