@@ -5,16 +5,16 @@ from train import fine_tune_bert
 from predict import make_predictions_with_finetuned_model
 import sys
 
-def main(argv = None):
-    if argv == None:
+def main(argv=None):
+    if argv is None:
         argv = sys.argv
     epochs = int(argv[0])
     batch_size = int(argv[1])
     mode = argv[2]
     has_gold = bool(argv[3])
     
-    fine_tune_bert(epochs = epochs, batch_size = batch_size, mode = mode)
-    make_predictions_with_finetuned_model(batch_size = batch_size, load_epoch = epochs, has_gold = has_gold, mode = mode)
+    fine_tune_bert(epochs=epochs, batch_size=batch_size, mode=mode)
+    make_predictions_with_finetuned_model(batch_size=batch_size, load_epoch=epochs, has_gold=has_gold, mode=mode)
     
 if __name__ == '__main__':
     main(sys.argv[1:])
