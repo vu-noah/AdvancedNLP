@@ -1,4 +1,4 @@
-# 02.03.2023
+# 10.03.2023
 # Execute the fine-tuning of BERT-based model and make predictions
 
 from train import fine_tune_bert
@@ -6,6 +6,11 @@ from predict import make_predictions_with_finetuned_model
 import sys
 
 def main(argv=None):
+    """Fine-tune a BERT model for Semantic Role Labeling and making predictions.
+    argv[0]: the number of epochs
+    argv[1]: the batch size
+    argv[2]: the mode (can be 'token_type_IDs' or 'flag_with_pred_token')
+    argv[3]: whether or not the data has gold labels (True or False)"""
     if argv is None:
         argv = sys.argv
     epochs = int(argv[0])
@@ -18,7 +23,3 @@ def main(argv=None):
     
 if __name__ == '__main__':
     main(sys.argv[1:])
-    
-   # command line example: 
-   # python3 C:\\Users\\User\\AdvancedNLP\\main.py 5 4 token_type_IDs True
-   
