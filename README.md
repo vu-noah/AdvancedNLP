@@ -23,14 +23,19 @@ The repository contains the following files:
 - train_reduced.py: reduced version of the above
 
 Instructions:
+
 Call preprocess_to_json.py from the command line.
+
 Example:
+
 C:\\Users\\user\\Downloads\\AdvancedNLP-main\\python preprocess_to_json.py
 
 Call create_mini_files_srl_json.py from the command line (unless you want to train and evaluate on the full dataset 
 -- in this case, you need to adjust the file paths in train(_reduced).py and predict(_reduced).py to point to the 
 original datasets.
+
 Example:
+
 C:\\Users\\user\\Downloads\\AdvancedNLP-main\\python create_mini_files_srl_json.py
 
 Note: Our main code submissions are the scripts train.py, predict.py, and bert_utils.py.
@@ -42,11 +47,15 @@ To run the main script, call the main script it in the commandline in the follow
 There are two possible modes: token_type_IDs and flag_with_pred_token
 
 token_type_IDs performs fine-tuning by assigning a different token type ID to the current predicate for every instance.
+
 flag_with_pred_token performs fine-tuning by surrounding the current predicate with two special tokens: [PRED] and [\PRED].
 
 For instance (on Windows): 
+
 C:\\Users\\user\\Downloads\\AdvancedNLP-main\\python main.py 5 4 token_type_IDs True
+
 Or to run the main_reduced script: 
+
 C:\\Users\\user\\Downloads\\AdvancedNLP-main\\python main_reduced.py 1 4 token_type_IDs True
 
 If you do want to execute the reduced scripts, within the saved_models directory, you need to manually create a new
