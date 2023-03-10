@@ -18,12 +18,11 @@ from transformers import get_linear_schedule_with_warmup
 
 
 def fine_tune_bert(epochs: int = 5, batch_size: int = 4, mode: str = 'token_type_IDs'):
-    """
-
-    :param epochs:
-    :param batch_size:
-    :param mode:
-    :return:
+    """fine tune a BERT model for Semantic Role Labeling. 
+    :param int epochs: the number of epochs (how many times the model should be trained)
+    :param int batch_size: the batch size (the number of instances that are processed before the model is updated)
+    :param str mode: the method of fine_tuning ('token_type_IDs' or 'flag_with_pred_token')
+    :return: None, but saves model to file 
     """
     assert mode == 'token_type_IDs' or mode == 'flag_with_pred_token', 'Mode for training the model wrongly specified.'
 
