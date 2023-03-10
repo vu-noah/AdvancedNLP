@@ -12,7 +12,7 @@ The repository contains the following files:
 - requirements.txt: a file listing all the requirements to run the code
 - bert_utils.py: helper functions for fine-tuning a BERT-based token classification system and making predictions
 - bert_utils_reduced.py: reduced version of the above
-- create_mini_files_srl_json.py: to be executed after preprocessing the connlu data sets to json, creates smaller datasets
+- create_mini_files_srl_json.py: to be executed after preprocessing the conllu data sets to json, creates smaller datasets
 - main.py: executes train.py and predict.py
 - main_reduced.py: executes train_reduced.py and predict_reduced.py
 - predict.py: contains code to make predictions on a test set with a fine-tuned model
