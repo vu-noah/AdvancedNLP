@@ -6,7 +6,6 @@ This repository contains the following directories:
 - Assignment 1: directory containing code that was used for assignment 1
 - Assignment 2: directory containing code that was used for assignment 2
 - Data: directory holding the original .conllu files and the pre-processed files
-- saved_models: directory where the fine-tuned models and the predictions will be stored
 
 The repository contains the following files:
 - requirements.txt: a file listing all the requirements to run the code
@@ -23,6 +22,8 @@ The repository contains the following files:
 - train_reduced.py: reduced version of the above
 
 Instructions:
+
+Create a new directory where the fine-tuned models and the predictions will be stored: saved_models
 
 Call preprocess_to_json.py from the command line.
 
