@@ -18,7 +18,7 @@ The repository contains the following files:
 - predict.py: contains code to make predictions on a test set with a fine-tuned model
 - predict_reduced.py reduced version of the above
 - preprocess_datasets.py: does not need to be executed on its own, contains code needed for preprocess_to_json.py
-- preprocess_to_json.py: preprocesses the connlu data files to json format
+- preprocess_to_json.py: preprocesses the conllu data files to json format
 - train.py: contains code to fine-tune a BERT-based system
 - train_reduced.py: reduced version of the above
 
