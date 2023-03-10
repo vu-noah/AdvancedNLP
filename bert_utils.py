@@ -20,7 +20,6 @@ logger = logging.getLogger(__name__)
 def get_torch_device(verbose: bool = True, gpu_ix: int = 0) -> tuple[torch.device, bool]:
     """
     Check if a GPU is available, if not: use CPU.
-
     :param verbose: whether to print information to the console
     :param gpu_ix: indicator of whether a GPU is available
     :return: device, use_cuda
@@ -50,7 +49,6 @@ def wordpieces_to_tokens(wordpieces: list, labelpieces: list = None) -> tuple[li
     """
     Map word pieces and predicted labels back to the size of the original input and return the input and its prediction
     as lists.
-
     :param wordpieces: the word pieces produced by the BertTokenizer
     :param labelpieces: the predicated labels for the word pieces
     :return: full_words, full_labels
@@ -73,7 +71,6 @@ def expand_to_wordpieces(original_sentence: list, tokenizer: BertTokenizer, orig
     Perform tokenization on input data (to word pieces); also expands BIO, but assigns the original label ONLY to the
     Head of the WordPiece (First WP). Also creates token type IDs where the First WP of the current predicate is
     assigned a 1, all other pieces a 0.
-
     :param original_sentence: list of full-words
     :param original_labels: list of labels corresponding to each full-word
     :param tokenizer: To convert input into BERT-model WordPieces
@@ -110,17 +107,14 @@ def expand_to_wordpieces(original_sentence: list, tokenizer: BertTokenizer, orig
 def data_to_tensors(dataset: list, tokenizer: BertTokenizer, max_len: int, labels: list = None,
                     label2index: dict = None, pad_token_label_id: int = -100) -> tuple:
     """
-    Take the input data and labels. Tokenize the input data to word pieces. Extend labels to be of the same size.
-    Create a token type IDs for every sentence (1 for the head word piece of the current predicate, 0 for all other
-    tokens). Convert everything to tensors.
 
-    :param dataset: list of lists of all input sentences
-    :param tokenizer: the tokenizer (to convert input to word pieces)
-    :param max_len: maximum sequence length, for padding and truncating
-    :param labels: list of lists of all labels for the input sentences
-    :param label2index: dictionary mapping the labels to unique indices
-    :param pad_token_label_id: the ID to be used for padded pieces
-    :return: LongTensor(input_ids), LongTensor(attention_masks), label_ids,  LongTensor(seq_lengths), token_type_IDs
+    :param dataset:
+    :param tokenizer:
+    :param max_len:
+    :param labels:
+    :param label2index:
+    :param pad_token_label_id:
+    :return:
     """
     tokenized_sentences, label_indices, token_type_IDs_list = [], [], []
 
@@ -194,11 +188,10 @@ def get_annotatated_sentence(rows: list, has_labels: bool) -> tuple[list, list]:
 
 def add_to_label_dict(labels: list, label_dict: dict) -> dict:
     """
-    Take a list of labels, check whether they are already in the label dictionary, if not add them, assign a unique
-    ID to each unique label.
-    :param labels: list of labels
-    :param label_dict: the current version of the label dict
-    :return: label_dict: the updated version of the label dict
+
+    :param labels:
+    :param label_dict:
+    :return:
     """
     for l in labels:
         if l not in label_dict:
@@ -210,7 +203,7 @@ def add_to_label_dict(labels: list, label_dict: dict) -> dict:
 def read_json_srl(filename: str, mode: str = 'token_type_IDs') -> tuple[list[list], list[list], dict]:
     """
     Read in a json file created from an original conllu file and extract the tokens and labels for each sentence as well
-    as a dictionary mapping the labels to a number. Flag the current predicate if in "flag_with_pred_token" mode.
+    as a dictionary mapping the labels to a number. Flag the current predicate.
 
     :param str filename: the path to the json file you want to read in
     :param mode: the way you want to perform fine-tuning, either by flagging the current predicate with special
@@ -285,18 +278,17 @@ def evaluate_bert_model(eval_dataloader: DataLoader, eval_batch_size: int, model
                         label_map: dict, pad_token_label_id: int, full_report: bool = False, prefix: str = "",
                         mode: str = 'token_type_IDs') -> tuple[dict, list]:
     """
-    Perform predictions on test data. Return the results as well as the original input and its predictions.
 
-    :param eval_dataloader: the DataLoader for the evaluation set (test set)
-    :param eval_batch_size: the batch size for evaluation
-    :param model: the fine-tuned model
-    :param tokenizer: the tokenizer
-    :param label_map: the dictionary mapping labels to unique IDs
-    :param pad_token_label_id: the ID for padded pieces
-    :param full_report: whether to print the full result report
-    :param prefix: the name of the evaluation set, informational purpose only
-    :param mode: the fine-tuning method (token_type_IDs or flag_with_pred_token)
-    :return: results, full_word_preds
+    :param eval_dataloader:
+    :param eval_batch_size:
+    :param model:
+    :param tokenizer:
+    :param label_map:
+    :param pad_token_label_id:
+    :param full_report:
+    :param prefix:
+    :param mode:
+    :return:
     """
     logger.info("***** Running evaluation %s *****", prefix)
     logger.info("  Batch size = %d", eval_batch_size)
@@ -388,10 +380,10 @@ def evaluate_bert_model(eval_dataloader: DataLoader, eval_batch_size: int, model
 ##### Input/Output Functions #####
 def save_losses(losses: dict, filename: str) -> None:
     """
-    Save the calculated average loss for an epoch to a file.
-    :param losses: losses per epoch
-    :param filename: file path to the file where the losses should be saved
-    :return: None
+
+    :param losses:
+    :param filename:
+    :return:
     """
     out = open(filename, "w")
     out.write(json.dumps({"losses": losses})+"\n")
@@ -399,10 +391,10 @@ def save_losses(losses: dict, filename: str) -> None:
 
 def save_label_dict(label2index: dict, filename: str) -> None:
     """
-    Save the dictionary mapping labels to unique IDs.
-    :param label2index: the dictionary mapping labels to unique IDs.
-    :param filename: the file path to the file where the dictionary should be saved
-    :return: None
+
+    :param label2index:
+    :param filename:
+    :return:
     """
     out = open(filename, "w")
     out.write(json.dumps(label2index))
@@ -410,9 +402,9 @@ def save_label_dict(label2index: dict, filename: str) -> None:
 
 def load_label_dict(modelpath: str) -> dict:
     """
-    Load the dictionary mapping labels to unique IDs.
-    :param modelpath: the path to the file holding the dictionary
-    :return: label_dict
+
+    :param modelpath:
+    :return:
     """
     fp = open(modelpath)
     label_dict = json.load(fp)
@@ -423,12 +415,12 @@ def load_label_dict(modelpath: str) -> dict:
 # Saving best-practices: if you use defaults names for the model, you can reload it using from_pretrained()
 def save_model(output_dir: str, arg_dict: dict, model: BertModel, tokenizer: BertTokenizer):
     """
-    Save the fine-tuned model to a directory.
-    :param output_dir: the directoy where the model should be saved
-    :param arg_dict: model parameters
-    :param model: the model
-    :param tokenizer: the tokenizer
-    :return: None
+
+    :param output_dir:
+    :param arg_dict:
+    :param model:
+    :param tokenizer:
+    :return:
     """
     # Create output directory if needed
     if not os.path.exists(output_dir):
@@ -445,11 +437,11 @@ def save_model(output_dir: str, arg_dict: dict, model: BertModel, tokenizer: Ber
 
 def load_model(model_class, tokenizer_class, model_dir) -> tuple:
     """
-
-    :param model_class:
-    :param tokenizer_class:
-    :param model_dir:
-    :return:
+    loads a trained model and tokenizer from file (created in train.py) for prediction
+    :param model_class: the type of BERT model (e.g. BertForTokenClassification)
+    :param tokenizer_class: the type of tokenizer (e.g. BertTokenizer)
+    :param model_dir: the path to the model 
+    :return: the model and the tokenizer
     """
     # Load a trained model and vocabulary that you have fine-tuned
     model = model_class.from_pretrained(model_dir)
@@ -464,9 +456,8 @@ def load_model(model_class, tokenizer_class, model_dir) -> tuple:
 def format_time(elapsed: float) -> str:
     """
     Take a time in seconds and return a string in the format hh:mm:ss.
-
-    :param elapsed:
-    :return:
+    :param float elapsed: the time in seconds 
+    :return: the time difference (str) in the format hh:mm:ss
     """
     # Round to the nearest second.
     elapsed_rounded = int(round(elapsed))
@@ -474,10 +465,10 @@ def format_time(elapsed: float) -> str:
     # Format as hh:mm:ss
     return str(datetime.timedelta(seconds=elapsed_rounded))
 
-
-def get_bool_value(str_bool: str) -> bool:
+#was in the original file, but not used
+def get_bool_value(str_bool: str) -> bool: 
     """
-
+    
     :param str_bool:
     :return:
     """
