@@ -3,7 +3,18 @@
 
 from train_reduced import fine_tune_bert
 from predict_reduced import make_predictions_with_finetuned_model
+import sys
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+    epochs = int(argv[0])
+    batch_size = int(argv[1])
+    mode = argv[2]
+    has_gold = bool(argv[3])
+    
+    fine_tune_bert(epochs=epochs, batch_size=batch_size, mode=mode)
+    make_predictions_with_finetuned_model(batch_size=batch_size, load_epoch=epochs, has_gold=has_gold, mode=mode)
 
 if __name__ == '__main__':
-    fine_tune_bert(epochs=1, batch_size=4, mode='token_type_IDs')
-    make_predictions_with_finetuned_model(batch_size=4, load_epoch=1, has_gold=True, mode='token_type_IDs')
+    main(sys.argv[1:])
