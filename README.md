@@ -23,8 +23,6 @@ The repository contains the following files:
 
 Instructions:
 
-Create a new directory where the fine-tuned models and the predictions will be stored: saved_models
-
 For your convenience, we already included the json files with train and test data in the Data directory. If you do not have them:
 
 Call preprocess_to_json.py from the command line.
@@ -66,5 +64,6 @@ Or to run the main_reduced script:
 
 C:\\Users\\user\\Downloads\\AdvancedNLP-main\\python main_reduced.py 1 4 token_type_IDs True
 
-If you do want to execute the reduced scripts, within the saved_models directory, you need to manually create a new
-directory: MY_BERT_SRL_reduced.
+If you do want to execute the reduced scripts, you need to manually create:
+- saved_models: a directory where the fine-tuned models and the predictions will be stored
+- saved_models/MY_BERT_SRL_reduced
