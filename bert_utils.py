@@ -307,7 +307,7 @@ def evaluate_bert_model(eval_dataloader: DataLoader, eval_batch_size: int, model
         b_input_mask = batch[1]
         b_labels = batch[2]
         if mode == 'token_type_IDs':
-            b_token_type_IDs = batch[3]
+            b_token_type_IDs = batch[4]
 
         # Compute the model output, calculate the loss
         with torch.no_grad():
