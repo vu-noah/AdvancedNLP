@@ -13,7 +13,9 @@ from transformers import BertForTokenClassification, AdamW, BertTokenizer, get_l
 
 
 def fine_tune_bert(epochs: int = 5, batch_size: int = 4, mode: str = 'token_type_IDs'):
-    """fine tune a BERT model for Semantic Role Labeling. 
+    """
+    Fine-tune a BERT model for Semantic Role Labeling.
+
     :param int epochs: the number of epochs (how many times the model should be trained)
     :param int batch_size: the batch size (the number of instances that are processed before the model is updated)
     :param str mode: the method of fine_tuning ('token_type_IDs' or 'flag_with_pred_token')
