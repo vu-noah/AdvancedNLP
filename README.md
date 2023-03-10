@@ -10,4 +10,7 @@ This repository contains the following directories:
 The repository contains the following files:
 - requirements.txt: a file listing all the requirements to run the code
 
-Instructions:
+Instructions: (!!! NOAH please check)
+To run the script, call the main script it in the commandline in the following format: python3[path to the script][number of epochs][batch size][mode][has_gold (True/False)]
+for instance (on Windows): python3 C:\\Users\\user\\Downloads\\AdvancedNLP-main\\main.py 5 4 token_type_IDs True
+Or to run the main_reduced script: python3 C:\\Users\\user\\Downloads\\AdvancedNLP-main\\main.py 1 4 token_type_IDs True
