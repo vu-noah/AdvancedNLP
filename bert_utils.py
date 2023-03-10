@@ -19,10 +19,10 @@ logger = logging.getLogger(__name__)
 
 def get_torch_device(verbose: bool = True, gpu_ix: int = 0) -> tuple[torch.device, bool]:
     """
-
-    :param verbose:
-    :param gpu_ix:
-    :return:
+    Check if a GPU is available, if not: use CPU.
+    :param verbose: whether to print information to the console
+    :param gpu_ix: indicator of whether a GPU is available
+    :return: device, use_cuda
     """
     use_cuda = False
     if torch.cuda.is_available():
@@ -47,10 +47,11 @@ LongTensor = torch.cuda.LongTensor if USE_CUDA else torch.LongTensor
 ##### Data Loading Functions #####
 def wordpieces_to_tokens(wordpieces: list, labelpieces: list = None) -> tuple[list, list]:
     """
-
-    :param wordpieces:
-    :param labelpieces:
-    :return:
+    Map word pieces and predicted labels back to the size of the original input and return the input and its prediction
+    as lists.
+    :param wordpieces: the word pieces produced by the BertTokenizer
+    :param labelpieces: the predicated labels for the word pieces
+    :return: full_words, full_labels
     """
     textpieces = " ".join(wordpieces)
     full_words = re.sub(r'\s##', '', textpieces).split()
@@ -67,11 +68,13 @@ def wordpieces_to_tokens(wordpieces: list, labelpieces: list = None) -> tuple[li
 def expand_to_wordpieces(original_sentence: list, tokenizer: BertTokenizer, original_labels: list = None) \
         -> tuple[list, list, list]:
     """
-    Also Expands BIO, but assigns the original label ONLY to the Head of the WordPiece (First WP)
-    :param original_sentence: List of Full-Words
-    :param original_labels: List of Labels corresponding to each Full-Word
-    :param tokenizer: To convert it into BERT-model WordPieces
-    :return:
+    Perform tokenization on input data (to word pieces); also expands BIO, but assigns the original label ONLY to the
+    Head of the WordPiece (First WP). Also creates token type IDs where the First WP of the current predicate is
+    assigned a 1, all other pieces a 0.
+    :param original_sentence: list of full-words
+    :param original_labels: list of labels corresponding to each full-word
+    :param tokenizer: To convert input into BERT-model WordPieces
+    :return: word_pieces, labels, token_type_IDs
     """
     txt_sentence = " ".join(original_sentence)
     txt_sentence = txt_sentence.replace("##", "")
