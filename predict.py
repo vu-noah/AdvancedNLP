@@ -15,13 +15,12 @@ from torch.utils.data import SequentialSampler
 
 def make_predictions_with_finetuned_model(batch_size: int = 4, load_epoch: int = 1, has_gold: bool = True,
                                           mode: str = 'token_type_IDs'):
-    """
-
-    :param batch_size:
-    :param load_epoch:
-    :param has_gold:
-    :param mode:
-    :return:
+    """Makes predictions for an SRL task with the BERT model created in train.py. 
+    :param int batch_size: the batch size (the number of instances that are processed before the model is updated) 
+    :param int load_epoch: the epoch we wish to load 
+    :param bool has_gold: whether or not the test set has gold labels
+    :param str mode: the method of fine_tuning ('token_type_IDs' or 'flag_with_pred_token')
+    :return: None, but saves predictions to file
     """
     assert mode == 'token_type_IDs' or mode == 'flag_with_pred_token', 'Mode for training the model wrongly specified.'
 
