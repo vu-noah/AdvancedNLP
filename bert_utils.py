@@ -165,6 +165,7 @@ def data_to_tensors(dataset: list, tokenizer: BertTokenizer, max_len: int, label
     return LongTensor(input_ids), LongTensor(attention_masks), label_ids,  LongTensor(seq_lengths), token_type_IDs
 
 
+# is not being used
 def get_annotatated_sentence(rows: list, has_labels: bool) -> tuple[list, list]:
     """
 
