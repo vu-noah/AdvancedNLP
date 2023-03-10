@@ -44,6 +44,11 @@ The reduced scripts were mainly created for illustrating the blog post.
 To run the main script, call the main script it in the commandline in the following format: 
 [path to the current directoy] python main.py [epochs: int] [batch_size: int] [mode: str] [has_gold: bool]
 
+- epochs: the number of epochs you want to train for
+- batch_size: the number of sentences per batch during training and evaluation
+- mode: the fine-tuning method
+- has_gold: whether the test data has gold labels and the performance should be evaluated or whether to apply the model on raw text
+
 There are two possible modes: token_type_IDs and flag_with_pred_token
 
 token_type_IDs performs fine-tuning by assigning a different token type ID to the current predicate for every instance.
