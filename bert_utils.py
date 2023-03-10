@@ -423,12 +423,12 @@ def load_label_dict(modelpath: str) -> dict:
 # Saving best-practices: if you use defaults names for the model, you can reload it using from_pretrained()
 def save_model(output_dir: str, arg_dict: dict, model: BertModel, tokenizer: BertTokenizer):
     """
-
-    :param output_dir:
-    :param arg_dict:
-    :param model:
-    :param tokenizer:
-    :return:
+    Save the fine-tuned model to a directory.
+    :param output_dir: the directoy where the model should be saved
+    :param arg_dict: model parameters
+    :param model: the model
+    :param tokenizer: the tokenizer
+    :return: None
     """
     # Create output directory if needed
     if not os.path.exists(output_dir):
