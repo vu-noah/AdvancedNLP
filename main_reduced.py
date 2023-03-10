@@ -10,7 +10,7 @@ def main(argv=None):
     argv[0]: the number of epochs
     argv[1]: the batch size
     argv[2]: the mode (can be 'token_type_IDs' or 'flag_with_pred_token')
-    argv[3]: whether or not the data has gold labels (True or False)"""
+    argv[3]: whether or not the test set has gold labels (True or False)"""
     if argv is None:
         argv = sys.argv
     epochs = int(argv[0])
