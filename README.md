@@ -25,6 +25,8 @@ Instructions:
 
 Create a new directory where the fine-tuned models and the predictions will be stored: saved_models
 
+For your convenience, we already included the json files with train and test data in the Data directory. If you do not have them:
+
 Call preprocess_to_json.py from the command line.
 
 Example:
