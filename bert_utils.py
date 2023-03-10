@@ -107,14 +107,16 @@ def expand_to_wordpieces(original_sentence: list, tokenizer: BertTokenizer, orig
 def data_to_tensors(dataset: list, tokenizer: BertTokenizer, max_len: int, labels: list = None,
                     label2index: dict = None, pad_token_label_id: int = -100) -> tuple:
     """
-
-    :param dataset:
-    :param tokenizer:
-    :param max_len:
-    :param labels:
-    :param label2index:
-    :param pad_token_label_id:
-    :return:
+    Take input data and tokenize to word pieces. Extend labels to be of the same size. Also create token type IDs for each sentence.
+    Transform everything into tensors.
+    
+    :param dataset: list of lists of input tokens
+    :param tokenizer: the tokenizer
+    :param max_len: the maximum sequence length
+    :param labels: list of lists of labels for input tokens
+    :param label2index: the dictionary mapping labels to unique IDs
+    :param pad_token_label_id: the ID used for padded tokens
+    :return: LongTensor(input_ids), LongTensor(attention_masks), label_ids,  LongTensor(seq_lengths), token_type_IDs
     """
     tokenized_sentences, label_indices, token_type_IDs_list = [], [], []
 
@@ -189,10 +191,10 @@ def get_annotatated_sentence(rows: list, has_labels: bool) -> tuple[list, list]:
 
 def add_to_label_dict(labels: list, label_dict: dict) -> dict:
     """
-
-    :param labels:
-    :param label_dict:
-    :return:
+    Create a dictionary that maps every label to a unique ID.
+    :param labels: list of labels
+    :param label_dict: current version of label dict
+    :return: label_dict
     """
     for l in labels:
         if l not in label_dict:
@@ -279,17 +281,18 @@ def evaluate_bert_model(eval_dataloader: DataLoader, eval_batch_size: int, model
                         label_map: dict, pad_token_label_id: int, full_report: bool = False, prefix: str = "",
                         mode: str = 'token_type_IDs') -> tuple[dict, list]:
     """
-
-    :param eval_dataloader:
-    :param eval_batch_size:
-    :param model:
-    :param tokenizer:
-    :param label_map:
-    :param pad_token_label_id:
-    :param full_report:
-    :param prefix:
-    :param mode:
-    :return:
+    Make predictions with a fine-tuned model and evaluate the outcome. Save predictions and inputs.
+    
+    :param eval_dataloader: the DataLoader for the evaluation set (test set)
+    :param eval_batch_size: the batch size for evaluation
+    :param model: the fine-tuned model
+    :param tokenizer: the tokenizer
+    :param label_map: the dictionary mapping labels to unique IDs
+    :param pad_token_label_id: the ID for padded pieces
+    :param full_report: whether to print a full report
+    :param prefix: the name of the test set
+    :param mode: the fine-tuning mode
+    :return: results, full_word_preds
     """
     logger.info("***** Running evaluation %s *****", prefix)
     logger.info("  Batch size = %d", eval_batch_size)
@@ -381,10 +384,10 @@ def evaluate_bert_model(eval_dataloader: DataLoader, eval_batch_size: int, model
 ##### Input/Output Functions #####
 def save_losses(losses: dict, filename: str) -> None:
     """
-
-    :param losses:
-    :param filename:
-    :return:
+    Save the losses for each epoch.
+    :param losses: losses per epoch
+    :param filename: file path
+    :return: None
     """
     out = open(filename, "w")
     out.write(json.dumps({"losses": losses})+"\n")
@@ -392,10 +395,10 @@ def save_losses(losses: dict, filename: str) -> None:
 
 def save_label_dict(label2index: dict, filename: str) -> None:
     """
-
-    :param label2index:
-    :param filename:
-    :return:
+    Save the dictionary mapping labels to IDs.
+    :param label2index: the dictionary mapping labels to IDs.
+    :param filename: file path
+    :return: None
     """
     out = open(filename, "w")
     out.write(json.dumps(label2index))
@@ -403,9 +406,9 @@ def save_label_dict(label2index: dict, filename: str) -> None:
 
 def load_label_dict(modelpath: str) -> dict:
     """
-
-    :param modelpath:
-    :return:
+    Load the saved dictionary mapping labels to IDs.
+    :param modelpath: file path
+    :return: label_dict
     """
     fp = open(modelpath)
     label_dict = json.load(fp)
@@ -416,12 +419,13 @@ def load_label_dict(modelpath: str) -> dict:
 # Saving best-practices: if you use defaults names for the model, you can reload it using from_pretrained()
 def save_model(output_dir: str, arg_dict: dict, model: BertModel, tokenizer: BertTokenizer):
     """
-
-    :param output_dir:
-    :param arg_dict:
-    :param model:
-    :param tokenizer:
-    :return:
+    Save the fine-tuned model to a directory.
+    
+    :param output_dir: directory to which to save
+    :param arg_dict: madel parameters
+    :param model: the model
+    :param tokenizer: the tokenizer
+    :return: None
     """
     # Create output directory if needed
     if not os.path.exists(output_dir):
